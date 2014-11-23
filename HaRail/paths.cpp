@@ -16,11 +16,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
 #include "paths.h"
 #include "gtfs.h"
+#include "port.h"
+
 #include <iostream>
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 #include <sstream>
 
-int str2int(string& str)
+int str2int(const string& str)
 {
 	return boost::lexical_cast<int, string>(str);
 }
@@ -30,12 +33,15 @@ string int2str(int i)
 	return boost::lexical_cast<string, int>(i);
 }
 
-int convertTime(string& time)
+int convertTime(const string& time)
 {
 	if (time.substr(2, 1) != ":" || time.substr(5, 1) != ":") {
-		throw new exception("bad time");
+		throw new HaException("bad time");
 	}
-	return str2int(time.substr(0, 2)) * 3600 + str2int(time.substr(3, 2)) * 60 + str2int(time.substr(6, 2));
+	string hour_str(time.substr(0, 2));
+	string min_str(time.substr(3, 2));
+	string sec_str(time.substr(6, 2));
+	return str2int(hour_str) * 3600 + str2int(min_str) * 60 + str2int(sec_str);
 }
 
 string padWithZeroes(string data, unsigned int target_len)
@@ -68,12 +74,12 @@ Station *getStationById(int id)
 	return g_stations_by_id->at(id);
 }
 
-Station *getStationByName(string& name)
+Station *getStationByName(const string& name)
 {
 	return g_stations_by_name->at(name);
 }
 
-Stop::Stop(int id, string& time)
+Stop::Stop(int id, const string& time)
 : time(convertTime(time)),
 station(getStationById(id))
 {
@@ -88,12 +94,12 @@ dest_time(dest_time)
 {
 }
 
-int Edge::getCost(int curr_time)
+int Edge::getCost(int curr_time) const
 {
 	return this->getDestTime() - curr_time;
 }
 
-bool Edge::isAvailable(int curr_time)
+bool Edge::isAvailable(int curr_time) const
 {
 	return this->getSourceTime() >= curr_time;
 }
@@ -141,7 +147,7 @@ void TestDataSource::initStations()
 	Station::createStation(600, "stat_f");
 }
 
-void TestDataSource::initTrain(int train_id, vector<Stop>& stops)
+void TestDataSource::initTrain(int train_id, const vector<Stop>& stops) const
 {
 	if (stops.size() < 1) {
 		return;
@@ -151,7 +157,7 @@ void TestDataSource::initTrain(int train_id, vector<Stop>& stops)
 	}
 }
 
-#define TEST_NONE
+#define TEST1
 
 void TestDataSource::initTrains()
 {
@@ -187,7 +193,7 @@ int dijkstra(Station *start, int start_time, Station *end)
 	start->setBestCost(0);
 	Station *curr = start;
 	while (curr != end) {
-		for each (Edge *edge in *curr->getEdges()) {
+		for (Edge *edge : *curr->getEdges()) {
 			if (edge->isAvailable(time) && !edge->getDest()->getVisited()) {
 				int cost = edge->getCost(start_time);
 				if (edge->getDest()->getBestCost() > cost) {
@@ -200,22 +206,27 @@ int dijkstra(Station *start, int start_time, Station *end)
 		
 		int closest_station_cost = UNEXPLORED_COST;
 		Station *closest_station = nullptr;
-		for each (Station *station in *g_stations) {
+		for (Station *station : *g_stations) {
 			if (!station->getVisited() && station->getBestCost() < closest_station_cost) {
 				closest_station_cost = station->getBestCost();
 				closest_station = station;
 			}
 		}
 
-		curr = closest_station;
-		time = start_time + closest_station->getBestCost();
+		if (closest_station) {
+			curr = closest_station;
+			time = start_time + closest_station->getBestCost();
+		}
+		else {
+			throw new HaException("Impossible route");
+		}
 	}
 	return time;
 }
 
 Edge *getEdgeWithTrainId(Station *s, int train_id)
 {
-	for each (Edge *edge in *s->getEdges()) {
+	for (Edge *edge : *s->getEdges()) {
 		if (edge->getTrainId() == train_id) {
 			return edge;
 		}
@@ -346,7 +357,7 @@ pair<string, int> backtraceRoute(Station *start, int start_time, Station *end, i
 
 void listStations()
 {
-	for each (Station *station in *g_stations) {
+	for (Station *station : *g_stations) {
 		cout << station->getStationId() << " : " << station->getStationName() << endl;
 	}
 }
@@ -367,7 +378,7 @@ void printUsage()
 
 void resetEnvironment()
 {
-	for each (Station *station in *g_stations) {
+	for (Station *station : *g_stations) {
 		station->setBestSource(nullptr);
 		station->setBestDest(nullptr);
 		station->setBestCost(UNEXPLORED_COST);
@@ -440,9 +451,8 @@ int main(int argc, char *argv[])
 	try {
 		ds->initTrains();
 	}
-	catch (exception *e) {
-		string what(e->what());
-		cout << "Error: " << what << endl;
+	catch (HaException *e) {
+		cout << "Error: " << e->what() << endl;
 		return 0;
 	}
 	Station *start_station;
@@ -470,8 +480,15 @@ int main(int argc, char *argv[])
 		cout << "Error: Invalid dest_station" << endl;
 		return 0;
 	}
-
-	int dest_time = dijkstra(start_station, start_time, dest_station);
+	
+	int dest_time;
+	try {
+		dest_time = dijkstra(start_station, start_time, dest_station);
+	}
+	catch (HaException *e) {
+		cout << "Error: " << e->what() << endl;
+		return 0;
+	}
 	pair<string, int> best_res = backtraceRoute(start_station, start_time, dest_station, dest_time);
 
 	if (g_optimize) {
@@ -479,7 +496,14 @@ int main(int argc, char *argv[])
 			int first_rail_time = start_station->getBestDest()->getSourceTime();
 			int new_start_time = first_rail_time + 1;
 			resetEnvironment();
-			if (dest_time == dijkstra(start_station, new_start_time, dest_station)) {
+			int new_dest_time;
+			try {
+				new_dest_time = dijkstra(start_station, new_start_time, dest_station);
+			}
+			catch (HaException *) {
+				break;
+			}
+			if (dest_time == new_dest_time) {
 				//cout << endl <<  "BUT WAIT, THERES MORE!" << endl << "Rail switch optimization found a (possibly) better route:" << endl;
 				pair<string, int> curr_res = backtraceRoute(start_station, start_time, dest_station, dest_time);
 				if (curr_res.second <= best_res.second) {

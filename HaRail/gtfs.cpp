@@ -14,7 +14,10 @@ GNU General Public License for more details.
 * You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "gtfs.h"
+#include "port.h"
 
 #include <fstream>
 #include <boost/algorithm/string.hpp>
@@ -33,7 +36,8 @@ GTFSDataSource::~GTFSDataSource()
 void GTFSDataSource::initStations()
 {
 	boost::filesystem::path p = root_path / boost::filesystem::path("stops.txt");
-	ifstream ifs(p.c_str(), std::ios_base::in);
+
+	ifstream ifs(p.string(), std::ios_base::in);
 	string line;
 	getline(ifs, line);
 	vector<string> line_split;
@@ -43,7 +47,7 @@ void GTFSDataSource::initStations()
 	}
 }
 
-void GTFSDataSource::loadTrainsForDate(char *start, int size)
+void GTFSDataSource::loadTrainsForDate(char *start) const
 {
 	char *line_ptr = strtok(start, "\r\n");
 	vector<string> line_split, id_split;
@@ -68,12 +72,12 @@ void GTFSDataSource::loadTrainsForDate(char *start, int size)
 				curr_train_id = train_id;
 				curr_seq = seq;
 				if (curr_seq != 1) {
-					throw new exception("bad format");
+					throw new HaException("bad format");
 				}
 			}
 			else {
 				if (seq != ++curr_seq) {
-					throw new exception("bad format");
+					throw new HaException("bad format");
 				}
 				last_station->getEdges()->push_back(new Edge(train_id, last_station, station, last_time, dw_time1));
 			}
@@ -87,30 +91,33 @@ void GTFSDataSource::loadTrainsForDate(char *start, int size)
 	}
 }
 
-void GTFSDataSource::readFile(const string& path, char **out_buf, int *out_size)
+void GTFSDataSource::readFile(const string& path, char **out_buf)
 {
 	ifstream ifs(path, ios::in | ios::binary | ios::ate);
 	if (!ifs.good()) {
-		throw new exception("Could not access database");
+		throw new HaException("Could not access database");
 	}
-	int size = ifs.tellg();
-	char *buf = new char[size];
+	unsigned int size = (unsigned int)ifs.tellg();
+	if (size == UINT_MAX) {
+		exit(0);
+	}
+	char *buf = new char[size + 1];
 	if (!buf) {
-		throw new exception("Not enough memory");
+		throw new HaException("Not enough memory");
 	}
 	ifs.seekg(0, ios_base::beg);
 	ifs.read(buf, size);
+	buf[size] = 0;
 	*out_buf = buf;
-	*out_size = size;
 }
 
-char *GTFSDataSource::fasttrackToDate(char *buf, int size)
+char *GTFSDataSource::fasttrackToDate(char *buf) const
 {
 	string to_find_str = string("\r\n") + date;
 	const char *to_find = to_find_str.c_str();
 	char *result = strstr(buf, to_find);
 	if (!result) {
-		throw new exception("Invalid date or database too old");
+		throw new HaException("Invalid date or database too old");
 	}
 	return result + 2;
 }
@@ -127,9 +134,8 @@ void GTFSDataSource::initTrains()
 {
 	boost::filesystem::path p = root_path / boost::filesystem::path("stop_times.txt");
 	char *buf;
-	int size;
-	readFile(p.string(), &buf, &size);
-	char *start = fasttrackToDate(buf, size);
-	loadTrainsForDate(start, size);
+	readFile(p.string(), &buf);
+	char *start = fasttrackToDate(buf);
+	loadTrainsForDate(start);
 	delete[] buf;
 }

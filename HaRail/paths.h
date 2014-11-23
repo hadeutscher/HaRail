@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #include <unordered_map>
 
 #define UNCOPYABLE_CLASS(x) private: x(const x&) = delete; x& operator=(const x&) = delete;
-#define PROP_RO(type, varname, readname) public: type readname() { return varname; } protected: type varname;
+#define PROP_RO(type, varname, readname) public: type readname() const { return varname; } protected: type varname;
 #define PROP_RW(type, varname, readname, writename) public: type readname() { return varname; } void writename(type value) { varname = value; } protected: type varname;
 static const int UNEXPLORED_COST = 0x7FFFFFFF;
 
@@ -33,17 +33,17 @@ class Station;
 class IDataSource;
 class TestDataSource;
 
-int str2int(string& str);
+int str2int(const string& str);
 string int2str(int i);
 string padWithZeroes(string data, unsigned int target_len);
-int convertTime(string& time);
+int convertTime(const string& time);
 Station *getStationById(int id);
-Station *getStationByName(string& name);
+Station *getStationByName(const string& name);
 
 class Stop {
 public:
 	Stop(int id, const char *time) : Stop(id, string(time)) {};
-	Stop(int id, string& time);
+	Stop(int id, const string& time);
 	virtual ~Stop() {};
 
 	PROP_RO(Station *, station, getStation);
@@ -55,8 +55,8 @@ public:
 	Edge(int train_id, Station *source, Station *dest, int source_time, int dest_time);
 	virtual ~Edge() {};
 
-	int getCost(int curr_time);
-	bool isAvailable(int curr_time);
+	int getCost(int curr_time) const;
+	bool isAvailable(int curr_time) const;
 
 	PROP_RO(int, train_id, getTrainId);
 	PROP_RO(Station *, source, getSource);
@@ -99,7 +99,7 @@ public:
 	virtual void initTrains();
 
 private:
-	void initTrain(int train_id, vector<Stop>& stops);
+	void initTrain(int train_id, const vector<Stop>& stops) const;
 
 	UNCOPYABLE_CLASS(TestDataSource);
 };

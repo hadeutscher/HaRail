@@ -14,31 +14,17 @@ GNU General Public License for more details.
 * You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
-#ifndef __GTFS_H__
-#define __GTFS_H__
+#ifndef __PORT_H__
+#define __PORT_H__
 
-#include "paths.h"
+#include <stdexcept>
+#include <string>
 
-#include <boost/filesystem.hpp>
+using namespace std;
 
-class GTFSDataSource : public IDataSource {
+class HaException : public runtime_error {
 public:
-	GTFSDataSource(const string& root, const string& date = getCurrentDate());
-	virtual ~GTFSDataSource();
-	virtual void initStations();
-	virtual void initTrains();
-
-private:
-	void loadTrainsForDate(char *start) const;
-	char *fasttrackToDate(char *buf) const;
-	
-	static void readFile(const string& path, char **out_buf);
-	static string getCurrentDate();
-
-	boost::filesystem::path root_path;
-	string date;
-
-	UNCOPYABLE_CLASS(GTFSDataSource);
+	HaException(const string& message)
+		: runtime_error(message) { };
 };
-
-#endif //__GTFS_H__
+#endif //__PORT_H__
