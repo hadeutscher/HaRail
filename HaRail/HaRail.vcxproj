@@ -11,13 +11,27 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="gtfs.cpp" />
-    <ClCompile Include="paths.cpp" />
+    <ClCompile Include="ArgumentParser.cpp" />
+    <ClCompile Include="Graph.cpp" />
+    <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="GTFSDataSource.cpp" />
+    <ClCompile Include="IDataSource.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="TestDataSource.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="gtfs.h" />
-    <ClInclude Include="paths.h" />
-    <ClInclude Include="port.h" />
+    <ClInclude Include="ArgumentParser.h" />
+    <ClInclude Include="Edge.h" />
+    <ClInclude Include="Graph.h" />
+    <ClInclude Include="GTFSDataSource.h" />
+    <ClInclude Include="HaException.h" />
+    <ClInclude Include="IDataSource.h" />
+    <ClInclude Include="common.h" />
+    <ClInclude Include="Node.h" />
+    <ClInclude Include="Station.h" />
+    <ClInclude Include="TestDataSource.h" />
+    <ClInclude Include="Train.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9DECCCC8-74BC-45ED-99F8-791E4B2B8209}</ProjectGuid>
