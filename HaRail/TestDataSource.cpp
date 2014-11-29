@@ -46,6 +46,8 @@ namespace HaRail {
 	{
 		switch (test) {
 		case 1:
+			// Tests basic train switch cost logic. Expected result is to ride train 1 all the way to station 600, 
+			// even though some of the route appears to be faster if we switch train.
 			// run with -t 1 100 10:00:00 600
 			initTrain(3, stop_arr_t{
 				  makeStop(500, "12:01:00"), makeStop(600, "12:30:00")
@@ -58,19 +60,8 @@ namespace HaRail {
 			});
 			break;
 		case 2:
-			// run with -t 2 100 10:00:00 500
-			initTrain(1, stop_arr_t{
-				  makeStop(100, "10:00:00"), makeStop(200, "10:30:00"), makeStop(300, "11:00:00"), makeStop(400, "11:30:00")
-		});
-			initTrain(2, stop_arr_t{
-				makeStop(400, "12:00:00"), makeStop(500, "12:30:00")
-			});
-			initTrain(3, stop_arr_t{
-				makeStop(300, "11:01:00"), makeStop(400, "11:02:00")
-			});
-			break;
-		case 3:
-			// run with -t 3 100 10:00:00 300
+			// Basic shortest-path test, expected result is to ride train 2 from 100 to 400 and then go back to 300 using train 3
+			// run with -t 2 100 10:00:00 300
 			initTrain(1, stop_arr_t{
 				  makeStop(100, "10:00:00"), makeStop(200, "10:30:00"), makeStop(300, "11:00:00"), makeStop(400, "11:30:00")
 		});
@@ -80,6 +71,38 @@ namespace HaRail {
 			initTrain(3, stop_arr_t{
 				makeStop(400, "10:30:00"), makeStop(300, "10:40:00")
 			});
+			break;
+		case 3:
+			// Test train switch minimization in a more complicated case. Expected result is to only use train 1.
+			// run with -t 3 100 10:00:00 400
+			initTrain(1, stop_arr_t{
+				  makeStop(100, "10:10:00"), makeStop(200, "10:30:00"), makeStop(300, "11:00:00"), makeStop(400, "11:30:00")
+		});
+			initTrain(2, stop_arr_t{
+				makeStop(100, "10:00:00"), makeStop(300, "10:30:00")
+			});
+			break;
+		case 4:
+			// Test trains with WAIT_ON_TRAIN and alt-route finding
+			// run with -t 4 100 10:00 300
+			//     expected result is to use train 2 and then switch to 3
+			createTrain(1, getStationById(100), getStationById(200), Utils::parseTime("10:00"), Utils::parseTime("10:20"));
+			createTrain(1, getStationById(200), getStationById(300), Utils::parseTime("10:30"), Utils::parseTime("11:00"));
+			
+			createTrain(2, getStationById(100), getStationById(200), Utils::parseTime("10:10"), Utils::parseTime("10:20"));
+			
+			createTrain(3, getStationById(200), getStationById(300), Utils::parseTime("10:30"), Utils::parseTime("10:40"));
+			break;
+		case 5:
+			// Test trains with WAIT_ON_TRAIN
+			// run with -t 5 100 10:00 300
+			//     expected result is to use train 1 only
+			createTrain(1, getStationById(100), getStationById(200), Utils::parseTime("10:00"), Utils::parseTime("10:20"));
+			createTrain(1, getStationById(200), getStationById(300), Utils::parseTime("10:30"), Utils::parseTime("11:00"));
+
+			createTrain(2, getStationById(100), getStationById(200), Utils::parseTime("10:10"), Utils::parseTime("10:20"));
+
+			createTrain(3, getStationById(200), getStationById(300), Utils::parseTime("10:30"), Utils::parseTime("11:00"));
 			break;
 		default:
 			throw HaException("Test case not implemented");

@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 namespace HaRail {
 	class StringTokenizer {
 	public:
+		class iterator;
+
 		// Class Methods
 		StringTokenizer(const char *buf, const char *token) : buf(buf), token(token), token_len(strlen(token)), buf_end(buf + strlen(buf)) {}
 		~StringTokenizer() {}
@@ -32,6 +34,10 @@ namespace HaRail {
 		const char *getNextToken(const char *curr) const;
 		void advanceIterator(const char **curr, const char **next_tok) const;
 		string buildString(const char *curr, const char *next_tok) const { return string(curr, next_tok); }
+
+		// Iterator Methods
+		StringTokenizer::iterator begin() { return StringTokenizer::iterator(buf, this); }
+		StringTokenizer::iterator end() { return StringTokenizer::iterator(buf_end, this); }
 
 		class iterator {
 		public:
@@ -48,10 +54,6 @@ namespace HaRail {
 			const char *next_tok;
 			StringTokenizer *parent;
 		};
-
-		// Iterator Methods
-		StringTokenizer::iterator begin() { return StringTokenizer::iterator(buf, this); }
-		StringTokenizer::iterator end() { return StringTokenizer::iterator(buf_end, this); }
 
 	protected:
 		// Fields

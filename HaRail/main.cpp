@@ -63,6 +63,27 @@ namespace HaRail {
 		cout << " to " << last_train->getDest()->getStationName() << " (" << Utils::makeTime(last_train->getDestTime(), true) << ")" << endl;
 	}
 
+	int getRouteEndTime(const vector<Train *>& route)
+	{
+		return route[route.size() - 1]->getDestTime();
+	}
+
+	int countTrainSwitches(const vector<Train *>& route)
+	{
+		int result = 0;
+		int last_tid = -1;
+		for (Train *train : route)
+		{
+			if (train->getTrainId() != last_tid) {
+				if (last_tid != -1) {
+					result++;
+				}
+				last_tid = train->getTrainId();
+			}
+		}
+		return result;
+	}
+
 	int main(int argc, const char *argv[])
 	{
 		IDataSource *ds = nullptr;
@@ -94,8 +115,49 @@ namespace HaRail {
 			ds->initTrains();
 			Graph g(ds, start_station, start_time);
 			g.dijkstra(dest_station);
-			vector<Train *> route = g.backtraceRoute();
-			printRoute(route);
+			vector<Train *> shortest_route = g.backtraceRoute();
+			vector<Train *> best_route = shortest_route;
+			while (true) {
+				// Try to obtain a route with a later train, that still ends at the same time
+				int best_route_start = best_route[0]->getSourceTime();
+				
+				Graph g2(ds, start_station, best_route_start + 1);
+				try {
+					g2.dijkstra(dest_station);
+				}
+				catch (HaException) {
+					break;
+				}
+				vector<Train *> alt_route = g2.backtraceRoute();
+				if (getRouteEndTime(alt_route) > getRouteEndTime(best_route)) {
+					break;
+				}
+				// We found a route that starts later, and ends at the same time.
+				if (getRouteEndTime(alt_route) != getRouteEndTime(best_route)) {
+					// This should not be possible
+					cout << "BUG DETECTED, please report this" << endl;
+				}
+				best_route = alt_route;
+
+				// Perhaps it doesn't even cost more train switches, in which case its simply better?
+				if (countTrainSwitches(shortest_route) >= countTrainSwitches(alt_route)) {
+					if (countTrainSwitches(shortest_route) != countTrainSwitches(alt_route)) {
+						// This should not be possible
+						cout << "BUG DETECTED, please report this" << endl;
+					}
+					shortest_route = alt_route;
+				}
+			}
+			if (shortest_route == best_route) {
+				printRoute(best_route);
+			}
+			else {
+				cout << "Best route (train switches most important):" << endl;
+				printRoute(shortest_route);
+				cout << endl;
+				cout << "Best route (delayed leaving most important):" << endl;
+				printRoute(best_route);
+			}
 		}
 		catch (HaException e) {
 			cout << "Error: " << e.what() << endl;

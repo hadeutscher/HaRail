@@ -24,12 +24,21 @@ namespace HaRail {
 		start_node(nullptr),
 		end_node(nullptr)
 	{
+		Train *last_train = nullptr;
 		for (Train *train : ids->getTrains()) {
+			if (last_train && last_train->getTrainId() == train->getTrainId() && last_train->getDestTime() != train->getSourceTime()) {
+				Node *wait_source = getNodeOrAdd(last_train->getDest(), last_train->getDestTime());
+				Node *wait_dest = getNodeOrAdd(train->getSource(), train->getSourceTime());
+				Edge *wait_edge = new Edge(Edge::WAIT_ON_TRAIN, nullptr, last_train->getTrainId(), wait_source, wait_dest, train->getSourceTime() - last_train->getDestTime());
+				edges.push_back(wait_edge);
+				wait_source->getEdges().push_back(wait_edge);
+			}
 			Node *source = getNodeOrAdd(train->getSource(), train->getSourceTime());
 			Node *dest = getNodeOrAdd(train->getDest(), train->getDestTime());
-			Edge *edge = new Edge(train, source, dest, train->getCost());
+			Edge *edge = new Edge(Edge::TRAIN_MOVE, train, train->getTrainId(), source, dest, train->getCost());
 			edges.push_back(edge);
 			source->getEdges().push_back(edge);
+			last_train = train;
 		}
 
 		start_node = getNodeOrAdd(source_station, start_time);
@@ -44,7 +53,7 @@ namespace HaRail {
 			for (unsigned int i = 0; i < node_arr.size() - 1; i++) {
 				Node *source = node_arr[i];
 				Node *dest = node_arr[i + 1];
-				Edge *edge = new Edge(nullptr, source, dest, dest->getStationTime() - source->getStationTime());
+				Edge *edge = new Edge(Edge::WAIT_IN_STATION, nullptr, -1, source, dest, dest->getStationTime() - source->getStationTime());
 				edges.push_back(edge);
 				source->getEdges().push_back(edge);
 			}
@@ -70,13 +79,36 @@ namespace HaRail {
 		start_node->setVisited(true);
 		Node *curr = start_node;
 		while (curr->getStation() != dest_station) {
-			int curr_tid = getCurrentTrain(curr);
+			Edge *last_edge = curr->getBestSource();
 			for (Edge *edge : curr->getEdges()) {
 				if (!edge->getDest()->getVisited()) {
 					int cost = curr->getBestCost() + edge->getCost();
 
-					if (curr_tid != -1 && edge->getTrain() && edge->getTrain()->getTrainId() != curr_tid) {
-						cost += SWITCH_COST;
+					if (last_edge) {
+						if (last_edge->getType() == Edge::TRAIN_MOVE || last_edge->getType() == Edge::WAIT_ON_TRAIN) {
+							// We are already on train - we can only get off the train, or continue on it.
+							if (edge->getType() == Edge::WAIT_IN_STATION) {
+								// Got off train, add train switch cost
+								cost += SWITCH_COST;
+							}
+							else if (edge->getTrainId() != last_edge->getTrainId()) {
+								if (last_edge->getType() == Edge::TRAIN_MOVE) {
+									// Cannot switch trains in 0 time - ignore edge
+									continue;
+								}
+								else {
+									// We are waiting on train, so we can switch trains in virtually 0 time (Since we could have already gone off the train instead of waiting)
+									// However, it still costs time to avoid trains using another train's WAIT_ON_TRAIN to do a cheap train switch
+									cost += SWITCH_COST;
+								}
+							}
+						}
+						else {
+							// We are on station - we can board a train, or continue waiting.
+							if (edge->getType() == Edge::WAIT_ON_TRAIN) {
+								continue;
+							}
+						}
 					}
 
 					if (edge->getDest()->getBestCost() > cost) {
@@ -91,6 +123,9 @@ namespace HaRail {
 			int pair_cost;
 			Node *pair_node;
 			do {
+				if (pq.size() == 0) {
+					throw HaException("impossible route");
+				}
 				pair<Node *, int> p = pq.top();
 				pq.pop();
 				pair_node = p.first;

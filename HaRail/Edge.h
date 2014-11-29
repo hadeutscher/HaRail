@@ -22,12 +22,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 namespace HaRail {
 	class Edge {
 	public:
+		enum type {
+			TRAIN_MOVE,
+			WAIT_IN_STATION,
+			WAIT_ON_TRAIN
+		};
+
 		// Class Methods
-		Edge(Train *train, Node *source, Node *dest, int cost)
+		Edge(Edge::type edge_type, Train *train, int train_id, Node *source, Node *dest, int cost)
 			: train(train),
 			source(source),
 			dest(dest),
-			cost(cost) {}
+			cost(cost),
+			edge_type(edge_type),
+			train_id(train_id) {}
 		virtual ~Edge() {};
 
 		// Property Accessors
@@ -35,6 +43,8 @@ namespace HaRail {
 		Node *getSource() const { return source; }
 		Node *getDest() const { return dest; }
 		int getCost() const { return cost; }
+		Edge::type getType() const { return edge_type; }
+		int getTrainId() const { return train_id; }
 
 	protected:
 		// Fields
@@ -42,6 +52,8 @@ namespace HaRail {
 		Node *source;
 		Node *dest;
 		int cost;
+		Edge::type edge_type;
+		int train_id;
 
 		UNCOPYABLE_CLASS(Edge);
 	};
