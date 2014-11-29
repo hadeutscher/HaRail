@@ -18,35 +18,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #define __ARGS_H__
 
 #include "common.h"
-#include "IDataSource.h"
-#include "Station.h"
 #include <unordered_map>
 #include <iostream>
 
-class ArgumentParser {
-public:
-	// Class Methods
-	ArgumentParser(int argc, const char *argv[]) : argc(argc), argv(argv), args_map() {}
-	virtual ~ArgumentParser() {}
+namespace HaRail {
+	class ArgumentParser {
+	public:
+		// Class Methods
+		ArgumentParser(int argc, const char *argv[]) : argc(argc), argv(argv), args_map() {}
+		virtual ~ArgumentParser() {}
 
-	// Methods
-	void parseArguments();
-	template<typename T> T getArgument(const string &name) const { throw HaException("unimplemented"); }
-	template<> string getArgument<string>(const string& name) const { return args_map.at(name); }
-	template<> bool getArgument<bool>(const string& name) const { return args_map.count(name) > 0; }
-	static void showHelp();
+		// Methods
+		void parseArguments();
+		const string& getArgument(const string& name) const { return args_map.at(name); }
+		bool isArgumentExists(const string& name) const { return args_map.count(name) > 0; }
+		static void showHelp();
 
-	// Property Accessors
-	int getArgc() const { return argc; }
-	const char **getArgv() const { return argv; }
+		// Property Accessors
+		int getArgc() const { return argc; }
+		const char **getArgv() const { return argv; }
 
-protected:
-	// Fields
-	unordered_map<string, string> args_map;
-	int argc;
-	const char **argv;
+	protected:
+		// Fields
+		unordered_map<string, string> args_map;
+		int argc;
+		const char **argv;
 
-	UNCOPYABLE_CLASS(ArgumentParser);
-};
+		UNCOPYABLE_CLASS(ArgumentParser);
+	};
+}
 
 #endif //__ARGS_H__

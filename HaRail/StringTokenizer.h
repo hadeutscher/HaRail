@@ -21,43 +21,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #include <cstring>
 #include <string>
 
-class StringTokenizer {
-public:
-	// Class Methods
-	StringTokenizer(const char *buf, const char *token) : buf(buf), token(token), token_len(strlen(token)), buf_end(buf + strlen(buf)) {}
-	~StringTokenizer() {}
-
-	// Methods
-	const char *getNextToken(const char *curr) const;
-	void advanceIterator(const char **curr, const char **next_tok) const;
-	string buildString(const char *curr, const char *next_tok) const { return string(curr, next_tok); }
-
-	class iterator {
+namespace HaRail {
+	class StringTokenizer {
 	public:
-		iterator(const char *buf, StringTokenizer *parent) : pos(buf), parent(parent), next_tok(parent->getNextToken(pos)) {}
+		// Class Methods
+		StringTokenizer(const char *buf, const char *token) : buf(buf), token(token), token_len(strlen(token)), buf_end(buf + strlen(buf)) {}
+		~StringTokenizer() {}
 
-		StringTokenizer::iterator& operator++();
-		StringTokenizer::iterator operator++(int unused);
-		string operator*() const { return parent->buildString(pos, next_tok); }
-		bool operator==(const StringTokenizer::iterator& second) { return this->parent == second.parent && this->pos == second.pos; }
-		bool operator!=(const StringTokenizer::iterator& second) { return !this->operator==(second); }
+		// Methods
+		const char *getNextToken(const char *curr) const;
+		void advanceIterator(const char **curr, const char **next_tok) const;
+		string buildString(const char *curr, const char *next_tok) const { return string(curr, next_tok); }
+
+		class iterator {
+		public:
+			iterator(const char *buf, StringTokenizer *parent) : pos(buf), parent(parent), next_tok(parent->getNextToken(pos)) {}
+
+			StringTokenizer::iterator& operator++();
+			StringTokenizer::iterator operator++(int unused);
+			string operator*() const { return parent->buildString(pos, next_tok); }
+			bool operator==(const StringTokenizer::iterator& second) { return this->parent == second.parent && this->pos == second.pos; }
+			bool operator!=(const StringTokenizer::iterator& second) { return !this->operator==(second); }
+
+		protected:
+			const char *pos;
+			const char *next_tok;
+			StringTokenizer *parent;
+		};
+
+		// Iterator Methods
+		StringTokenizer::iterator begin() { return StringTokenizer::iterator(buf, this); }
+		StringTokenizer::iterator end() { return StringTokenizer::iterator(buf_end, this); }
 
 	protected:
-		const char *pos;
-		const char *next_tok;
-		StringTokenizer *parent;
+		// Fields
+		const char *buf;
+		const char *token;
+		const char *buf_end;
+		size_t token_len;
 	};
-	
-	// Iterator Methods
-	StringTokenizer::iterator begin() { return StringTokenizer::iterator(buf, this); }
-	StringTokenizer::iterator end() { return StringTokenizer::iterator(buf_end, this); }
-
-protected:
-	// Fields
-	const char *buf;
-	const char *token;
-	const char *buf_end;
-	int token_len;
-};
-
+}
 #endif //__HASTRTOK_H__

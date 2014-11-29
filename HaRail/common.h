@@ -20,27 +20,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #define STATIC_CLASS(x) private: x() = delete;
 #define UNCOPYABLE_CLASS(x) private: x(const x&) = delete; x& operator=(const x&) = delete;
 
+namespace HaRail {
 #ifdef _DEBUG
-static const char *DATA_ROOT = "C:\\irw_gtfs";
+#ifdef _WIN32
+	static const char *DATA_ROOT = "C:/irw_gtfs/";
+#else
+	static const char *DATA_ROOT = "~/irw_gtfs/";
+#endif
 #else // _DEBUG
-static const char *DATA_ROOT = "./irw_gtfs";
+	static const char *DATA_ROOT = "./irw_gtfs/";
 #endif // _DEBUG
 
-static const int SWITCH_COST = 60;
+	static const int SWITCH_COST = 60;
 
-using namespace std;
+	using namespace std;
 
-class Station;
-class Train;
-class Node;
-class Edge;
-class IDataSource;
-class TestDataSource;
-class GTFSDataSource;
-class HaException;
-class ArgumentParser;
-class Utils;
-class Graph;
-class StringTokenizer;
-
+	class Station;
+	class Train;
+	class Node;
+	class Edge;
+	class IDataSource;
+	class TestDataSource;
+	class GTFSDataSource;
+	class HaException;
+	class ArgumentParser;
+	class Utils;
+	class Graph;
+	class StringTokenizer;
+}
 #endif //__COMMON_H__

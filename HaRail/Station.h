@@ -18,27 +18,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #define __STATION_H__
 
 #include "common.h"
+#include <string>
 #include <vector>
 
-class Station {
-public:
-	// Class Methods
-	Station(int station_id, string station_name)
-		: station_id(station_id),
-		station_name(station_name)
-	{}
-	virtual ~Station() {}
+namespace HaRail {
+	class Station {
+	public:
+		// Class Methods
+		Station(int station_id, string station_name)
+			: station_id(station_id),
+			station_name(station_name)
+		{}
+		virtual ~Station() {}
 
-	// Property Accessors
-	int getStationId() const { return station_id; }
-	const string& getStationName() const { return station_name; }
+		// Property Accessors
+		int getStationId() const { return station_id; }
+		const string& getStationName() const { return station_name; }
 
-protected:
-	// Fields
-	int station_id;
-	string station_name;
+	protected:
+		// Fields
+		int station_id;
+		string station_name;
 
-	UNCOPYABLE_CLASS(Station);
-};
-
+		UNCOPYABLE_CLASS(Station);
+	};
+}
 #endif //__STATION_H__

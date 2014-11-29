@@ -27,30 +27,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #include <queue>
 #include <unordered_map>
 
-class Graph {
-public:
-	// Class Methods
-	Graph(const IDataSource *ids, Station *source_station, int start_time);
-	virtual ~Graph();
-	
-	// Methods
-	void dijkstra(Station *dest_station);
-	vector<Train *> backtraceRoute();
-	void resetGraph();
+namespace HaRail {
+	class Graph {
+	public:
+		// Class Methods
+		Graph(const IDataSource *ids, Station *source_station, int start_time);
+		virtual ~Graph();
 
-protected:
-	// Private Methods
-	Node *getNodeOrAdd(Station *station, int time);
-	int getCurrentTrain(Node *node) const;
+		// Methods
+		void dijkstra(Station *dest_station);
+		vector<Train *> backtraceRoute();
+		void resetGraph();
 
-	// Fields
-	vector<Node *> nodes;
-	unordered_map<Station *, unordered_map<int, Node *>> nodesByStation;
-	vector<Edge *> edges;
-	Node *start_node;
-	Node *end_node;
+	protected:
+		// Private Methods
+		Node *getNodeOrAdd(Station *station, int time);
+		int getCurrentTrain(Node *node) const;
 
-	UNCOPYABLE_CLASS(Graph);
-};
+		// Fields
+		vector<Node *> nodes;
+		unordered_map<Station *, unordered_map<int, Node *>> nodesByStation;
+		vector<Edge *> edges;
+		Node *start_node;
+		Node *end_node;
 
+		UNCOPYABLE_CLASS(Graph);
+	};
+}
 #endif //__GRAPH_H__

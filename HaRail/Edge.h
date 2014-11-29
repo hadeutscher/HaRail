@@ -19,30 +19,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
 #include "common.h"
 
-class Edge {
-public:
-	// Class Methods
-	Edge(Train *train, Node *source, Node *dest, int cost)
-		: train(train),
-		source(source),
-		dest(dest),
-		cost(cost) {}
-	virtual ~Edge() {};
+namespace HaRail {
+	class Edge {
+	public:
+		// Class Methods
+		Edge(Train *train, Node *source, Node *dest, int cost)
+			: train(train),
+			source(source),
+			dest(dest),
+			cost(cost) {}
+		virtual ~Edge() {};
 
-	// Property Accessors
-	Train *getTrain() const { return train; }
-	Node *getSource() const { return source; }
-	Node *getDest() const { return dest; }
-	int getCost() const { return cost; }
+		// Property Accessors
+		Train *getTrain() const { return train; }
+		Node *getSource() const { return source; }
+		Node *getDest() const { return dest; }
+		int getCost() const { return cost; }
 
-protected:
-	// Fields
-	Train *train;
-	Node *source;
-	Node *dest;
-	int cost;
+	protected:
+		// Fields
+		Train *train;
+		Node *source;
+		Node *dest;
+		int cost;
 
-	UNCOPYABLE_CLASS(Edge);
-};
-
+		UNCOPYABLE_CLASS(Edge);
+	};
+}
 #endif //__EDGE_H__

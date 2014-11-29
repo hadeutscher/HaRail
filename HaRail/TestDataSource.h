@@ -20,31 +20,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #include "common.h"
 #include "Utils.h"
 #include "IDataSource.h"
-#include "Edge.h"
 #include "Station.h"
 #include "Train.h"
+#include "HaException.h"
 #include <vector>
 
-typedef pair<Station *, int> stop_t;
-typedef vector<stop_t> stop_arr_t;
+namespace HaRail {
+	typedef pair<Station *, int> stop_t;
+	typedef vector<stop_t> stop_arr_t;
 
-class TestDataSource : public IDataSource {
-public:
-	// Class Methods
-	TestDataSource(int test) : test(test) {}
-	virtual ~TestDataSource() {}
-	virtual void initStations();
-	virtual void initTrains();
+	class TestDataSource : public IDataSource {
+	public:
+		// Class Methods
+		TestDataSource(int test) : test(test) {}
+		virtual ~TestDataSource() {}
+		virtual void initStations();
+		virtual void initTrains();
 
-protected:
-	// Private Methods
-	void initTrain(int train_id, const vector<stop_t>& stops);
-	stop_t makeStop(int station_id, const string& time_str) const;
+	protected:
+		// Private Methods
+		void initTrain(int train_id, const vector<stop_t>& stops);
+		stop_t makeStop(int station_id, const string& time_str) const;
 
-	// Fields
-	int test;
+		// Fields
+		int test;
 
-	UNCOPYABLE_CLASS(TestDataSource);
-};
-
+		UNCOPYABLE_CLASS(TestDataSource);
+	};
+}
 #endif //__TEST_SOURCE_H__

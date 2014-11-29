@@ -21,10 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #include <stdexcept>
 #include <string>
 
-class HaException : public runtime_error {
-public:
-	HaException(const string& message)
-		: runtime_error(message) {}
-};
-
+namespace HaRail {
+	class HaException : public runtime_error {
+	public:
+		HaException(const string& message)
+			: runtime_error(message) {}
+	};
+}
 #endif //__HAEXCEPT_H__

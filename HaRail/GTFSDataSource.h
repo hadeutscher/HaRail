@@ -21,29 +21,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #include "Utils.h"
 #include "IDataSource.h"
 #include "Station.h"
-#include "Edge.h"
+#include "Train.h"
 #include "StringTokenizer.h"
-#include <boost/filesystem.hpp>
+#include "HaException.h"
 #include <boost/algorithm/string.hpp>
 
-class GTFSDataSource : public IDataSource {
-public:
-	// Class Methods
-	GTFSDataSource(const string& root, const string& date) : root_path(root), date(date) {}
-	virtual ~GTFSDataSource() {}
-	virtual void initStations();
-	virtual void initTrains();
+namespace HaRail {
+	class GTFSDataSource : public IDataSource {
+	public:
+		// Class Methods
+		GTFSDataSource(const string& root, const string& date) : root_path(root), date(date) {}
+		virtual ~GTFSDataSource() {}
+		virtual void initStations();
+		virtual void initTrains();
 
-protected:
-	// Private Methods
-	void loadTrainsForDate(char *start);
-	char *fasttrackToDate(char *buf) const;
-	
-	// Fields
-	boost::filesystem::path root_path;
-	string date;
+	protected:
+		// Private Methods
+		void loadTrainsForDate(char *start);
+		char *fasttrackToDate(char *buf) const;
 
-	UNCOPYABLE_CLASS(GTFSDataSource);
-};
+		// Fields
+		string root_path;
+		string date;
 
+		UNCOPYABLE_CLASS(GTFSDataSource);
+	};
+}
 #endif //__GTFS_H__

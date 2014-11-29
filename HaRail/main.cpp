@@ -27,82 +27,90 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #include "Edge.h"
 #include "Graph.h"
 
-IDataSource *initializeDataSource(ArgumentParser& argp)
-{
-	if (argp.getArgument<bool>("test_source")) {
-		try {
-			return new TestDataSource(Utils::str2int(argp.getArgument<string>("test_source")));
-		}
-		catch (boost::bad_lexical_cast) {
-			cout << "Error: Invalid argument test_source" << endl;
-			throw HaException("Could not initialize data source");
-		}
-	}
-	else if (argp.getArgument<bool>("date")) {
-		return new GTFSDataSource(DATA_ROOT, argp.getArgument<string>("date"));
-	}
-	else {
-		return new GTFSDataSource(DATA_ROOT, Utils::getCurrentDate());
-	}
-}
-
-void printRoute(vector<Train *>& route)
-{
-	Train *last_train = nullptr;
-	for (Train *train : route) {
-		if (!last_train || train->getTrainId() != last_train->getTrainId()) {
-			// Boarding new train
-			if (last_train) {
-				cout << " to " << last_train->getDest()->getStationName() << " (" << Utils::makeTime(last_train->getDestTime(), true) << ")" << endl;
+namespace HaRail {
+	IDataSource *initializeDataSource(ArgumentParser& argp)
+	{
+		if (argp.isArgumentExists("test_source")) {
+			try {
+				return new TestDataSource(Utils::str2int(argp.getArgument("test_source")));
 			}
-			cout << "Train #" << train->getTrainId() << " from " << train->getSource()->getStationName() << " (" << Utils::makeTime(train->getSourceTime(), true) << ")";
+			catch (boost::bad_lexical_cast) {
+				cout << "Error: Invalid argument test_source" << endl;
+				throw HaException("Could not initialize data source");
+			}
 		}
-		last_train = train;
+		else if (argp.isArgumentExists("date")) {
+			return new GTFSDataSource(DATA_ROOT, argp.getArgument("date"));
+		}
+		else {
+			return new GTFSDataSource(DATA_ROOT, Utils::getCurrentDate());
+		}
 	}
-	cout << " to " << last_train->getDest()->getStationName() << " (" << Utils::makeTime(last_train->getDestTime(), true) << ")" << endl;
+
+	void printRoute(vector<Train *>& route)
+	{
+		Train *last_train = nullptr;
+		for (Train *train : route) {
+			if (!last_train || train->getTrainId() != last_train->getTrainId()) {
+				// Boarding new train
+				if (last_train) {
+					cout << " to " << last_train->getDest()->getStationName() << " (" << Utils::makeTime(last_train->getDestTime(), true) << ")" << endl;
+				}
+				cout << "Train #" << train->getTrainId() << " from " << train->getSource()->getStationName() << " (" << Utils::makeTime(train->getSourceTime(), true) << ")";
+			}
+			last_train = train;
+		}
+		cout << " to " << last_train->getDest()->getStationName() << " (" << Utils::makeTime(last_train->getDestTime(), true) << ")" << endl;
+	}
+
+	int main(int argc, const char *argv[])
+	{
+		IDataSource *ds = nullptr;
+		try {
+			ArgumentParser argp(argc, argv);
+			argp.parseArguments();
+			ds = initializeDataSource(argp);
+			ds->initStations();
+			if (argp.isArgumentExists("list_stations")) {
+				ds->listStations();
+				return 0;
+			}
+			if (!argp.isArgumentExists("start_station") || !argp.isArgumentExists("start_time") || !argp.isArgumentExists("dest_station")) {
+				argp.showHelp();
+				return 0;
+			}
+
+			Station *start_station, *dest_station;
+
+			try {
+				start_station = ds->getStationById(Utils::str2int(argp.getArgument("start_station")));
+				dest_station = ds->getStationById(Utils::str2int(argp.getArgument("dest_station")));
+			}
+			catch (boost::bad_lexical_cast) {
+				cout << "Error: start_station or dest_station not a number";
+				throw HaException("Invalid station");
+			}
+			int start_time = Utils::parseTime(argp.getArgument("start_time"));
+			ds->initTrains();
+			Graph g(ds, start_station, start_time);
+			g.dijkstra(dest_station);
+			vector<Train *> route = g.backtraceRoute();
+			printRoute(route);
+		}
+		catch (HaException e) {
+			cout << "Error: " << e.what() << endl;
+		}
+
+		if (ds) {
+			delete ds;
+			ds = nullptr;
+		}
+		return 0;
+	}
 }
 
+// Global Namespace
 int main(int argc, const char *argv[])
 {
-	IDataSource *ds = nullptr;
-	try {
-		ArgumentParser argp(argc, argv);
-		argp.parseArguments();
-		ds = initializeDataSource(argp);
-		ds->initStations();
-		if (argp.getArgument<bool>("list_stations")) {
-			ds->listStations();
-			return 0;
-		}
-		if (!argp.getArgument<bool>("start_station") || !argp.getArgument<bool>("start_time") || !argp.getArgument<bool>("dest_station")) {
-			argp.showHelp();
-			return 0;
-		}
-
-		Station *start_station, *dest_station;
-
-		try {
-			start_station = ds->getStationById(Utils::str2int(argp.getArgument<string>("start_station")));
-			dest_station = ds->getStationById(Utils::str2int(argp.getArgument<string>("dest_station")));
-		}
-		catch (boost::bad_lexical_cast) {
-			cout << "Error: start_station or dest_station not a number";
-			throw HaException("Invalid station");
-		}
-		int start_time = Utils::parseTime(argp.getArgument<string>("start_time"));
-		ds->initTrains();
-		Graph g(ds, start_station, start_time);
-		g.dijkstra(dest_station);
-		vector<Train *> route = g.backtraceRoute();
-		printRoute(route);
-	}
-	catch (HaException e) {
-		cout << "Error: " << e.what() << endl;
-	}
-
-	if (ds) {
-		delete ds;
-		ds = nullptr;
-	}
-	return 0;
+	return HaRail::main(argc, argv);
 }
