@@ -11,6 +11,11 @@ else
 	RM = rm -f
 endif
 
+ifeq ($(ANDROID), 1)
+	CC=arm-linux-gnueabihf-g++
+	LDFLAGS += -static -Wl,--dynamic-linker=/system/bin/linker -Wl,--hash-style=both
+endif
+
 all: Release/$(BINARY)
 
 Release/$(BINARY): HaRail/GCC_Release/ArgumentParser.o HaRail/GCC_Release/Graph.o HaRail/GCC_Release/GTFSDataSource.o HaRail/GCC_Release/IDataSource.o HaRail/GCC_Release/main.o HaRail/GCC_Release/StringTokenizer.o HaRail/GCC_Release/TestDataSource.o HaRail/GCC_Release/Utils.o
@@ -42,4 +47,4 @@ HaRail/GCC_Release/Utils.o: HaRail/Utils.cpp HaRail/Utils.h HaRail/HaException.h
 
 .PHONY: clean
 clean:
-	$(RM) $(BINARY) HaRail/GCC_Release/*.o
+	$(RM) Release/$(BINARY) HaRail/GCC_Release/*.o
