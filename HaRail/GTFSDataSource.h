@@ -22,20 +22,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #include "IDataSource.h"
 #include "Station.h"
 #include "Edge.h"
+#include "StringTokenizer.h"
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
 class GTFSDataSource : public IDataSource {
 public:
+	// Class Methods
 	GTFSDataSource(const string& root, const string& date) : root_path(root), date(date) {}
 	virtual ~GTFSDataSource() {}
 	virtual void initStations();
 	virtual void initTrains();
 
 protected:
+	// Private Methods
 	void loadTrainsForDate(char *start);
 	char *fasttrackToDate(char *buf) const;
 	
+	// Fields
 	boost::filesystem::path root_path;
 	string date;
 

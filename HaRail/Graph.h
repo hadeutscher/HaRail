@@ -1,3 +1,19 @@
+/* HaRail - Public transport fastest-route finder for Israel Railways
+* Copyright(C) 2014  haha01haha01
+
+* This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+* This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+* You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+
 #ifndef __GRAPH_H__
 #define __GRAPH_H__
 
@@ -13,17 +29,21 @@
 
 class Graph {
 public:
-	Graph(const IDataSource *ids);
+	// Class Methods
+	Graph(const IDataSource *ids, Station *source_station, int start_time);
 	virtual ~Graph();
 	
-	void dijkstra(Station *source_station, int start_time, Station *dest_station);
+	// Methods
+	void dijkstra(Station *dest_station);
 	vector<Train *> backtraceRoute();
 	void resetGraph();
 
 protected:
+	// Private Methods
 	Node *getNodeOrAdd(Station *station, int time);
 	int getCurrentTrain(Node *node) const;
 
+	// Fields
 	vector<Node *> nodes;
 	unordered_map<Station *, unordered_map<int, Node *>> nodesByStation;
 	vector<Edge *> edges;

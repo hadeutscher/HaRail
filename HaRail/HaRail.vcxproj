@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="ArgumentParser.cpp" />
     <ClCompile Include="Graph.cpp" />
+    <ClCompile Include="StringTokenizer.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="GTFSDataSource.cpp" />
     <ClCompile Include="IDataSource.cpp" />
@@ -29,6 +30,7 @@
     <ClInclude Include="common.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="Station.h" />
+    <ClInclude Include="StringTokenizer.h" />
     <ClInclude Include="TestDataSource.h" />
     <ClInclude Include="Train.h" />
     <ClInclude Include="Utils.h" />
@@ -79,7 +81,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -94,7 +96,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

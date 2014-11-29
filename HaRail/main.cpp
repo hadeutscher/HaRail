@@ -50,10 +50,11 @@ void printRoute(vector<Train *>& route)
 {
 	Train *last_train = nullptr;
 	for (Train *train : route) {
-		if (last_train && train->getTrainId() != last_train->getTrainId()) {
-			cout << " to " << last_train->getDest()->getStationName() << " (" << Utils::makeTime(last_train->getDestTime(), true) << ")" << endl;
-		}
-		else {
+		if (!last_train || train->getTrainId() != last_train->getTrainId()) {
+			// Boarding new train
+			if (last_train) {
+				cout << " to " << last_train->getDest()->getStationName() << " (" << Utils::makeTime(last_train->getDestTime(), true) << ")" << endl;
+			}
 			cout << "Train #" << train->getTrainId() << " from " << train->getSource()->getStationName() << " (" << Utils::makeTime(train->getSourceTime(), true) << ")";
 		}
 		last_train = train;
@@ -68,6 +69,7 @@ int main(int argc, const char *argv[])
 		ArgumentParser argp(argc, argv);
 		argp.parseArguments();
 		ds = initializeDataSource(argp);
+		ds->initStations();
 		if (argp.getArgument<bool>("list_stations")) {
 			ds->listStations();
 			return 0;
@@ -88,8 +90,9 @@ int main(int argc, const char *argv[])
 			throw HaException("Invalid station");
 		}
 		int start_time = Utils::parseTime(argp.getArgument<string>("start_time"));
-		Graph g(ds);
-		g.dijkstra(start_station, start_time, dest_station);
+		ds->initTrains();
+		Graph g(ds, start_station, start_time);
+		g.dijkstra(dest_station);
 		vector<Train *> route = g.backtraceRoute();
 		printRoute(route);
 	}

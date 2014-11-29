@@ -14,35 +14,34 @@ GNU General Public License for more details.
 * You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
-#ifndef __EDGE_H__
-#define __EDGE_H__
+#include "StringTokenizer.h"
 
-#include "common.h"
+const char *StringTokenizer::getNextToken(const char *curr) const
+{
+	const char *next = strstr(curr, token);
+	return next ? next : buf_end;
+}
 
-class Edge {
-public:
-	// Class Methods
-	Edge(Train *train, Node *source, Node *dest, int cost)
-		: train(train),
-		source(source),
-		dest(dest),
-		cost(cost) {}
-	virtual ~Edge() {};
+void StringTokenizer::advanceIterator(const char **curr, const char **next_tok) const
+{
+	if (*next_tok != buf_end) {
+		*curr = *next_tok + token_len;
+		*next_tok = getNextToken(*curr);
+	}
+	else {
+		*curr = buf_end;
+	}
+}
 
-	// Property Accessors
-	Train *getTrain() const { return train; }
-	Node *getSource() const { return source; }
-	Node *getDest() const { return dest; }
-	int getCost() const { return cost; }
+StringTokenizer::iterator& StringTokenizer::iterator::operator++()
+{
+	parent->advanceIterator(&pos, &next_tok); 
+	return *this;
+}
 
-protected:
-	// Fields
-	Train *train;
-	Node *source;
-	Node *dest;
-	int cost;
-
-	UNCOPYABLE_CLASS(Edge);
-};
-
-#endif //__EDGE_H__
+StringTokenizer::iterator StringTokenizer::iterator::operator++(int unused)
+{
+	StringTokenizer::iterator result = *this;
+	parent->advanceIterator(&pos, &next_tok); 
+	return result;
+}

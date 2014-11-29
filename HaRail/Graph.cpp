@@ -1,6 +1,22 @@
+/* HaRail - Public transport fastest-route finder for Israel Railways
+* Copyright(C) 2014  haha01haha01
+
+* This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+* This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+* You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+
 #include "Graph.h"
 
-Graph::Graph(const IDataSource *ids)
+Graph::Graph(const IDataSource *ids, Station *source_station, int start_time)
 : nodes(),
 nodesByStation(),
 edges(),
@@ -15,12 +31,15 @@ end_node(nullptr)
 		source->getEdges().push_back(edge);
 	}
 
+	start_node = getNodeOrAdd(source_station, start_time);
+
 	for (pair<Station *, unordered_map<int, Node *>> p : nodesByStation) {
-		vector<Node *> node_arr(p.second.size());
+		vector<Node *> node_arr;
+		node_arr.reserve(p.second.size());
 		for (pair<int, Node *> p2 : p.second) {
 			node_arr.push_back(p2.second);
 		}
-		sort(node_arr.begin(), node_arr.end(), [](const Node *& first, const Node *& second) -> bool { return first->getStationTime() > second->getStationTime(); });
+		sort(node_arr.begin(), node_arr.end(), [](Node *first, Node *second) -> bool { return first->getStationTime() < second->getStationTime(); });
 		for (unsigned int i = 0; i < node_arr.size() - 1; i++) {
 			Node *source = node_arr[i];
 			Node *dest = node_arr[i + 1];
@@ -41,12 +60,11 @@ Graph::~Graph()
 	}
 }
 
-void Graph::dijkstra(Station *source_station, int start_time, Station *dest_station)
+void Graph::dijkstra(Station *dest_station)
 {
 	auto pr = [](const pair<Node *, int>& first, const pair<Node *, int>& second) { return first.second > second.second; };
 	priority_queue<pair<Node *, int>, vector<pair<Node *, int>>, decltype(pr)> pq(pr);
 
-	start_node = nodesByStation[source_station][start_time];
 	start_node->setBestCost(0);
 	start_node->setVisited(true);
 	Node *curr = start_node;
@@ -57,7 +75,7 @@ void Graph::dijkstra(Station *source_station, int start_time, Station *dest_stat
 				int cost = curr->getBestCost() + edge->getCost();
 
 				if (curr_tid != -1 && edge->getTrain() && edge->getTrain()->getTrainId() != curr_tid) {
-					cost += 1;
+					cost += SWITCH_COST;
 				}
 
 				if (edge->getDest()->getBestCost() > cost) {
@@ -72,7 +90,7 @@ void Graph::dijkstra(Station *source_station, int start_time, Station *dest_stat
 		int pair_cost;
 		Node *pair_node;
 		do {
-			pair<Node *, int>& p = pq.top();
+			pair<Node *, int> p = pq.top();
 			pq.pop();
 			pair_node = p.first;
 			pair_cost = p.second;

@@ -23,8 +23,12 @@ void GTFSDataSource::initStations()
 	char *buf;
 
 	Utils::readFile(p.string(), &buf);
-	boost::char_separator<char> sep("\r\n");
-	boost::tokenizer<boost::char_separator<char>> tokenizer(buf, sep);
+	char *first_line = strstr(buf, "\r\n");
+	if (first_line == nullptr) {
+		throw HaException("bad database format");
+	}
+	first_line += 2;
+	StringTokenizer tokenizer(first_line, "\r\n");
 	vector<string> line_split;
 
 	for (string line : tokenizer) {
@@ -49,8 +53,7 @@ void GTFSDataSource::initTrains()
 
 void GTFSDataSource::loadTrainsForDate(char *buf)
 {
-	boost::char_separator<char> sep("\r\n");
-	boost::tokenizer<boost::char_separator<char>> tokenizer(buf, sep);
+	StringTokenizer tokenizer(buf, "\r\n");
 
 	vector<string> line_split, id_split;
 	int curr_train_id = -1;

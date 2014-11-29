@@ -21,10 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #define UNCOPYABLE_CLASS(x) private: x(const x&) = delete; x& operator=(const x&) = delete;
 
 #ifdef _DEBUG
-#define DATA_ROOT "C:\\irw_gtfs"
+static const char *DATA_ROOT = "C:\\irw_gtfs";
 #else // _DEBUG
-#define DATA_ROOT "./irw_gtfs"
+static const char *DATA_ROOT = "./irw_gtfs";
 #endif // _DEBUG
+
+static const int SWITCH_COST = 60;
 
 using namespace std;
 
@@ -39,5 +41,6 @@ class HaException;
 class ArgumentParser;
 class Utils;
 class Graph;
+class StringTokenizer;
 
 #endif //__COMMON_H__

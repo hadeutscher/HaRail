@@ -25,19 +25,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
 class ArgumentParser {
 public:
+	// Class Methods
 	ArgumentParser(int argc, const char *argv[]) : argc(argc), argv(argv), args_map() {}
 	virtual ~ArgumentParser() {}
 
+	// Methods
 	void parseArguments();
 	template<typename T> T getArgument(const string &name) const { throw HaException("unimplemented"); }
 	template<> string getArgument<string>(const string& name) const { return args_map.at(name); }
 	template<> bool getArgument<bool>(const string& name) const { return args_map.count(name) > 0; }
 	static void showHelp();
 
+	// Property Accessors
 	int getArgc() const { return argc; }
 	const char **getArgv() const { return argv; }
 
 protected:
+	// Fields
 	unordered_map<string, string> args_map;
 	int argc;
 	const char **argv;
