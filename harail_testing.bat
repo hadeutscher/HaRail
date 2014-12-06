@@ -1,0 +1,13 @@
+HaRail -t 1 100 10:00 600
+HaRail -t 2 100 10:00 300
+HaRail -t 3 100 10:00 400
+HaRail -t 4 100 10:00 300
+HaRail -t 5 100 10:00 300
+HaRail -d 071214 3500 20:00 800
+HaRail -d 010115 3500 20:00 800
+HaRail -d 311214 3500 20:00 800
+Harail -d 311215 3500 20:00 800
+Harail -d asdf 3500 20:00 800
+Harail -d 311214 asdf 20:00 800
+Harail -d 311214 3500 asdf 800
+HaRail -d 311214 3500 20:00 asdf

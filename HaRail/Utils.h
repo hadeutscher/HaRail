@@ -32,7 +32,18 @@ namespace HaRail {
 		static string padWithZeroes(const string& data, unsigned int target_len);
 		static string makeTime(int time, bool short_form);
 		static void readFile(const string& path, char **out_buf);
+		static void readFilePart(const string& path, char **out_buf, unsigned int start, unsigned int length);
 		static string getCurrentDate();
+		template<typename T>
+		static void writeObject(ofstream& ofs, T data) {
+			ofs.write((const char *)&data, sizeof(T));
+		}
+		template<typename T>
+		static T readObject(ifstream& ifs) {
+			T result;
+			ifs.read((char *)&result, sizeof(T));
+			return result;
+		}
 
 		STATIC_CLASS(Utils);
 		UNCOPYABLE_CLASS(Utils);

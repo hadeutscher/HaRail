@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #include "Train.h"
 #include "StringTokenizer.h"
 #include "HaException.h"
-#include <boost/algorithm/string.hpp>
 
 namespace HaRail {
 	class GTFSDataSource : public IDataSource {
@@ -35,10 +34,15 @@ namespace HaRail {
 		virtual void initStations();
 		virtual void initTrains();
 
+		// Constants
+		static const unsigned int INDEXER_VERSION = 1;
+
 	protected:
 		// Private Methods
 		void loadTrainsForDate(char *start);
 		char *fasttrackToDate(char *buf) const;
+		pair<int, int> getDateIndex() const;
+		void indexDatabase() const;
 
 		// Fields
 		string root_path;

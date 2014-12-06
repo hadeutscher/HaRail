@@ -31,7 +31,8 @@ namespace HaRail {
 	static const char *DATA_ROOT = "./irw_gtfs/";
 #endif // _DEBUG
 
-	static const int SWITCH_COST = 60;
+	static const unsigned int SWITCH_COST = 60; // This minimizes train switches
+	static const unsigned int MOVEMENT_COST = 1; // This minimizes train movements, to prevent e.g. going a->b->c->d->c->b instead of a->b->c->b, if they have the same dest time
 
 	using namespace std;
 
@@ -47,5 +48,7 @@ namespace HaRail {
 	class Utils;
 	class Graph;
 	class StringTokenizer;
+
+	// HashedPair is not included here because VC is stupid
 }
 #endif //__COMMON_H__

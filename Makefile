@@ -24,7 +24,7 @@ Release/$(BINARY): HaRail/GCC_Release/ArgumentParser.o HaRail/GCC_Release/Graph.
 HaRail/GCC_Release/ArgumentParser.o: HaRail/ArgumentParser.cpp HaRail/ArgumentParser.h HaRail/common.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-HaRail/GCC_Release/Graph.o: HaRail/Graph.cpp HaRail/Graph.h HaRail/IDataSource.h HaRail/Station.h HaRail/Train.h HaRail/Node.h HaRail/Edge.h HaRail/HaException.h HaRail/common.h
+HaRail/GCC_Release/Graph.o: HaRail/Graph.cpp HaRail/Graph.h HaRail/IDataSource.h HaRail/Station.h HaRail/Train.h HaRail/Node.h HaRail/Edge.h HaRail/HashedPair.h HaRail/HaException.h HaRail/common.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 HaRail/GCC_Release/GTFSDataSource.o: HaRail/GTFSDataSource.cpp HaRail/GTFSDataSource.h HaRail/IDataSource.h HaRail/Station.h HaRail/Train.h HaRail/Utils.h HaRail/StringTokenizer.h HaRail/HaException.h HaRail/common.h
@@ -33,7 +33,7 @@ HaRail/GCC_Release/GTFSDataSource.o: HaRail/GTFSDataSource.cpp HaRail/GTFSDataSo
 HaRail/GCC_Release/IDataSource.o: HaRail/IDataSource.cpp HaRail/IDataSource.h HaRail/Station.h HaRail/Train.h HaRail/HaException.h HaRail/common.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-HaRail/GCC_Release/main.o: HaRail/main.cpp HaRail/ArgumentParser.h HaRail/IDataSource.h HaRail/GTFSDataSource.h HaRail/TestDataSource.h HaRail/Station.h HaRail/Train.h HaRail/Node.h HaRail/Edge.h HaRail/Graph.h HaRail/StringTokenizer.h HaRail/Utils.h HaRail/HaException.h HaRail/common.h
+HaRail/GCC_Release/main.o: HaRail/main.cpp HaRail/ArgumentParser.h HaRail/IDataSource.h HaRail/GTFSDataSource.h HaRail/TestDataSource.h HaRail/Station.h HaRail/Train.h HaRail/Node.h HaRail/Edge.h HaRail/Graph.h HaRail/HashedPair.h HaRail/StringTokenizer.h HaRail/Utils.h HaRail/HaException.h HaRail/common.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 HaRail/GCC_Release/StringTokenizer.o: HaRail/StringTokenizer.cpp HaRail/StringTokenizer.h HaRail/common.h

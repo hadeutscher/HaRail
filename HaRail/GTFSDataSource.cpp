@@ -22,16 +22,19 @@ namespace HaRail {
 		char *buf;
 		Utils::readFile(root_path + "stops.txt", &buf);
 		char *first_line = strstr(buf, "\r\n");
-		if (first_line == nullptr) {
-			throw HaException("bad database format");
+		if (!first_line) {
+			throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
 		}
 		first_line += 2;
 		StringTokenizer tokenizer(first_line, "\r\n");
 		vector<string> line_split;
 
 		for (string line : tokenizer) {
-			boost::split(line_split, line, boost::is_any_of(","));
-			createStation(Utils::str2int(line_split.at(0)), line_split.at(1));
+			StringTokenizer line_tokenizer(line.c_str(), ",");
+			StringTokenizer::iterator i = line_tokenizer.begin();
+			int station_id = Utils::str2int(*i++);
+			string station_name = *i++;
+			createStation(station_id, station_name);
 		}
 
 		delete[] buf;
@@ -40,9 +43,11 @@ namespace HaRail {
 	void GTFSDataSource::initTrains()
 	{
 		char *buf;
-		Utils::readFile(root_path + "stop_times.txt", &buf);
-		char *start = fasttrackToDate(buf);
-		loadTrainsForDate(start);
+		pair<int, int> index = getDateIndex();
+		Utils::readFilePart(root_path + "stop_times.txt", &buf, index.first, index.second);
+		//char *start = fasttrackToDate(buf);
+		//loadTrainsForDate(start);
+		loadTrainsForDate(buf);
 
 		delete[] buf;
 	}
@@ -51,42 +56,44 @@ namespace HaRail {
 	{
 		StringTokenizer tokenizer(buf, "\r\n");
 
-		vector<string> line_split, id_split;
 		int curr_train_id = -1;
 		int curr_seq = -1;
 		Station *last_station = nullptr;
 		int last_time = -1;
 
 		for (string line : tokenizer) {
-			boost::split(line_split, line, boost::is_any_of(","));
-			if (boost::split(id_split, line_split.at(0), boost::is_any_of("_")).at(0) == date) {
-				int train_id = Utils::str2int(id_split.at(1));
-				string time1 = line_split.at(1);
-				string time2 = line_split.at(2);
-				Station *station = getStationById(Utils::str2int(line_split.at(3)));
-				int seq = Utils::str2int(line_split.at(4));
-				int dw_time1 = Utils::parseTime(time1);
-				int dw_time2 = Utils::parseTime(time2);
-				if (curr_train_id != train_id) {
-					// new train
-					curr_train_id = train_id;
-					curr_seq = seq;
-					if (curr_seq != 1) {
-						throw HaException("bad database format");
-					}
+			// Parse the line
+			StringTokenizer line_tokenizer(line.c_str(), ",");
+			StringTokenizer::iterator i = line_tokenizer.begin();
+			string date_id = *i++;
+			int dw_time1 = Utils::parseTime(*i++);
+			int dw_time2 = Utils::parseTime(*i++);
+			Station *station = getStationById(Utils::str2int(*i++));
+			int seq = Utils::str2int(*i++);
+			StringTokenizer date_id_tokenizer(date_id.c_str(), "_");
+			i = date_id_tokenizer.begin();
+			string train_date = *i++;
+			int train_id = Utils::str2int(*i++);
+
+			if (train_date != date) {
+				throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
+			}
+			if (curr_train_id != train_id) {
+				// new train
+				curr_train_id = train_id;
+				curr_seq = seq;
+				if (curr_seq != 1) {
+					throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
 				}
-				else {
-					if (seq != ++curr_seq) {
-						throw HaException("bad database format");
-					}
-					createTrain(train_id, last_station, station, last_time, dw_time1);
-				}
-				last_station = station;
-				last_time = dw_time2;
 			}
 			else {
-				return;
+				if (seq != ++curr_seq) {
+					throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
+				}
+				createTrain(train_id, last_station, station, last_time, dw_time1);
 			}
+			last_station = station;
+			last_time = dw_time2;
 		}
 	}
 
@@ -96,8 +103,70 @@ namespace HaRail {
 		const char *to_find = to_find_str.c_str();
 		char *result = strstr(buf, to_find);
 		if (!result) {
-			throw HaException("Invalid date or database too old");
+			throw HaException("Invalid date or database too old", HaException::DATABASE_FORMAT_ERROR);
 		}
 		return result + 2;
+	}
+
+	pair<int, int> GTFSDataSource::getDateIndex() const
+	{
+		ifstream ifs(root_path + "HaRail.idx", ios::in | ios::binary);
+
+		while (!ifs.good() || Utils::readObject<unsigned int>(ifs) != INDEXER_VERSION) {
+			cout << "New database found, indexing..." << endl;
+			if (ifs.is_open()) {
+				ifs.close();
+			}
+			indexDatabase();
+			ifs.open(root_path + "HaRail.idx", ios::in | ios::binary);
+		}
+		
+		unsigned int date_uint;
+		try {
+			date_uint = Utils::str2int(date);
+		}
+		catch (boost::bad_lexical_cast) {
+			throw HaException("Invalid date", HaException::CONVERSION_ERROR);
+		}
+
+		while (!ifs.eof()) {
+			unsigned int offs = Utils::readObject<unsigned int>(ifs);
+			unsigned int date_field = Utils::readObject<unsigned int>(ifs);
+			if (date_field == date_uint) {
+				unsigned int end_offs = Utils::readObject<unsigned int>(ifs);
+				return pair<int, int>(offs, end_offs - offs);
+			}
+		}
+		throw HaException("Invalid date or database too old", HaException::DATABASE_FORMAT_ERROR);
+	}
+
+	void GTFSDataSource::indexDatabase() const
+	{
+		char *buf;
+		Utils::readFile(root_path + "stop_times.txt", &buf);
+		char *first_line = strstr(buf, "\r\n");
+		if (!first_line) {
+			throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
+		}
+		first_line += 2;
+
+		ofstream ofs(root_path + "HaRail.idx", ios::out | ios::binary | ios::trunc);
+		Utils::writeObject<unsigned int>(ofs, INDEXER_VERSION);
+		string last_date("XXXXXX");
+		StringTokenizer tokenizer(first_line, "\r\n");
+		for (StringTokenizer::iterator i = tokenizer.begin(), end = tokenizer.end(); i != end; ++i) {
+			string line = *i;
+			if (line.length() < 8 || line.c_str()[6] != '_') {
+				throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
+			}
+			if (memcmp(last_date.c_str(), line.c_str(), 6)) {
+				last_date = line.substr(0, 6);
+				Utils::writeObject<unsigned int>(ofs, i.getPosition() - buf);
+				Utils::writeObject<unsigned int>(ofs, Utils::str2int(last_date));
+			}
+		}
+		Utils::writeObject<const char *>(ofs, tokenizer.end().getPosition());
+		Utils::writeObject<unsigned int>(ofs, UINT_MAX);
+		delete[] buf;
 	}
 }

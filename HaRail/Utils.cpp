@@ -25,7 +25,7 @@ namespace HaRail {
 		case 8:
 		{
 				  if (time.substr(5, 1) != ":") {
-					  throw HaException("bad time format");
+					  throw HaException("bad time format", HaException::CONVERSION_ERROR);
 				  }
 				  string sec_str(time.substr(6, 2));
 				  int seconds;
@@ -33,7 +33,7 @@ namespace HaRail {
 					  seconds = str2int(sec_str);
 				  }
 				  catch (boost::bad_lexical_cast) {
-					  throw HaException("bad time format");
+					  throw HaException("bad time format", HaException::CONVERSION_ERROR);
 				  }
 				  result += seconds;
 		}
@@ -41,7 +41,7 @@ namespace HaRail {
 		case 5:
 		{
 				  if (time.substr(2, 1) != ":") {
-					  throw HaException("bad time format");
+					  throw HaException("bad time format", HaException::CONVERSION_ERROR);
 				  }
 				  string hour_str(time.substr(0, 2));
 				  string min_str(time.substr(3, 2));
@@ -51,14 +51,14 @@ namespace HaRail {
 					  minutes = str2int(min_str);
 				  }
 				  catch (boost::bad_lexical_cast) {
-					  throw HaException("bad time format");
+					  throw HaException("bad time format", HaException::CONVERSION_ERROR);
 				  }
 				  result += hours * 3600 + minutes * 60;
 				  break;
 		}
 
 		default:
-			throw HaException("bad time format");
+			throw HaException("bad time format", HaException::CONVERSION_ERROR);
 		}
 
 		return result;
@@ -91,7 +91,7 @@ namespace HaRail {
 	{
 		ifstream ifs(path, ios::in | ios::binary | ios::ate);
 		if (!ifs.good()) {
-			throw HaException("Could not read file");
+			throw HaException("Could not read file", HaException::FILE_NOT_FOUND_ERROR);
 		}
 		unsigned int size = (unsigned int)ifs.tellg();
 		if (size == UINT_MAX) {
@@ -99,11 +99,30 @@ namespace HaRail {
 		}
 		char *buf = new char[size + 1];
 		if (!buf) {
-			throw HaException("Not enough memory");
+			throw HaException("Not enough memory", HaException::MEMORY_ERROR);
 		}
 		ifs.seekg(0, ios_base::beg);
 		ifs.read(buf, size);
 		buf[size] = 0;
+		*out_buf = buf;
+	}
+
+	void Utils::readFilePart(const string& path, char **out_buf, unsigned int start, unsigned int length)
+	{
+		ifstream ifs(path, ios::in | ios::binary);
+		if (!ifs.good()) {
+			throw HaException("Could not read file", HaException::FILE_NOT_FOUND_ERROR);
+		}
+		if (length == UINT_MAX) {
+			exit(0);
+		}
+		char *buf = new char[length + 1];
+		if (!buf) {
+			throw HaException("Not enough memory", HaException::MEMORY_ERROR);
+		}
+		ifs.seekg(start, ios_base::beg);
+		ifs.read(buf, length);
+		buf[length] = 0;
 		*out_buf = buf;
 	}
 

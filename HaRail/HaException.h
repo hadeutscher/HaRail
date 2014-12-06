@@ -24,8 +24,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 namespace HaRail {
 	class HaException : public runtime_error {
 	public:
-		HaException(const string& message)
-			: runtime_error(message) {}
+		enum type {
+			CONVERSION_ERROR,
+			FILE_NOT_FOUND_ERROR,
+			MEMORY_ERROR,
+			UNIMPLEMENTED_ERROR,
+			CRITICAL_ERROR,
+			INVALID_ROUTE_ERROR,
+			DATABASE_FORMAT_ERROR
+		};
+		HaException(const string& message, type type)
+			: runtime_error(message), type(type) {}
+
+		type getType() const { return type; }
+
+	protected:
+		type type;
 	};
 }
 #endif //__HAEXCEPT_H__

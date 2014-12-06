@@ -84,8 +84,8 @@ namespace HaRail {
 			break;
 		case 4:
 			// Test trains with WAIT_ON_TRAIN and alt-route finding
+			// expected result is to use train 2 and then switch to 3
 			// run with -t 4 100 10:00 300
-			//     expected result is to use train 2 and then switch to 3
 			createTrain(1, getStationById(100), getStationById(200), Utils::parseTime("10:00"), Utils::parseTime("10:20"));
 			createTrain(1, getStationById(200), getStationById(300), Utils::parseTime("10:30"), Utils::parseTime("11:00"));
 			
@@ -95,8 +95,8 @@ namespace HaRail {
 			break;
 		case 5:
 			// Test trains with WAIT_ON_TRAIN
+			// expected result is to use train 1 only in train switching mode, train 2 then 1 in delayed leaving
 			// run with -t 5 100 10:00 300
-			//     expected result is to use train 1 only
 			createTrain(1, getStationById(100), getStationById(200), Utils::parseTime("10:00"), Utils::parseTime("10:20"));
 			createTrain(1, getStationById(200), getStationById(300), Utils::parseTime("10:30"), Utils::parseTime("11:00"));
 
@@ -105,7 +105,7 @@ namespace HaRail {
 			createTrain(3, getStationById(200), getStationById(300), Utils::parseTime("10:30"), Utils::parseTime("11:00"));
 			break;
 		default:
-			throw HaException("Test case not implemented");
+			throw HaException("Test case not implemented", HaException::UNIMPLEMENTED_ERROR);
 		}
 	}
 }

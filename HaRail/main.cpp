@@ -36,7 +36,7 @@ namespace HaRail {
 			}
 			catch (boost::bad_lexical_cast) {
 				cout << "Error: Invalid argument test_source" << endl;
-				throw HaException("Could not initialize data source");
+				throw HaException("Could not initialize data source", HaException::CONVERSION_ERROR);
 			}
 		}
 		else if (argp.isArgumentExists("date")) {
@@ -108,8 +108,8 @@ namespace HaRail {
 				dest_station = ds->getStationById(Utils::str2int(argp.getArgument("dest_station")));
 			}
 			catch (boost::bad_lexical_cast) {
-				cout << "Error: start_station or dest_station not a number";
-				throw HaException("Invalid station");
+				cout << "Error: start_station or dest_station not a number" << endl;
+				throw HaException("Invalid station", HaException::CONVERSION_ERROR);
 			}
 			int start_time = Utils::parseTime(argp.getArgument("start_time"));
 			ds->initTrains();

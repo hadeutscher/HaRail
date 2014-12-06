@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #include "Train.h"
 #include "Node.h"
 #include "Edge.h"
+#include "HashedPair.h"
 #include <algorithm>
 #include <queue>
 #include <unordered_map>
@@ -41,12 +42,14 @@ namespace HaRail {
 
 	protected:
 		// Private Methods
-		Node *getNodeOrAdd(Station *station, int time);
+		Node *getNodeOrAdd(Station *station, int time, int train_id);
+		Edge *createEdge(Train *train, Node *source, Node *dest, int cost);
 		int getCurrentTrain(Node *node) const;
 
 		// Fields
 		vector<Node *> nodes;
-		unordered_map<Station *, unordered_map<int, Node *>> nodesByStation;
+		unordered_map<Station *, unordered_map<int, Node *>> generalNodesByStation;
+		unordered_map<Station *, unordered_map<pair<int, int>, Node *, HashedPair>> trainNodesByStation;
 		vector<Edge *> edges;
 		Node *start_node;
 		Node *end_node;

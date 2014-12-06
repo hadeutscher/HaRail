@@ -14,36 +14,18 @@ GNU General Public License for more details.
 * You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
-#ifndef __EDGE_H__
-#define __EDGE_H__
+#ifndef __HASHED_PAIR_H__
+#define __HASHED_PAIR_H__
 
 #include "common.h"
 
-namespace HaRail {
-	class Edge {
-	public:
-		// Class Methods
-		Edge(Train *train, Node *source, Node *dest, int cost)
-			: train(train),
-			source(source),
-			dest(dest),
-			cost(cost) {}
-		virtual ~Edge() {};
+class HashedPair {
+public:
+	template <typename T, typename U>
+	std::size_t operator()(const std::pair<T, U> &x) const
+	{
+		return 3 * std::hash<T>()(x.first) + std::hash<U>()(x.second);
+	}
+};
 
-		// Property Accessors
-		Train *getTrain() const { return train; }
-		Node *getSource() const { return source; }
-		Node *getDest() const { return dest; }
-		int getCost() const { return cost; }
-
-	protected:
-		// Fields
-		Train *train;
-		Node *source;
-		Node *dest;
-		int cost;
-
-		UNCOPYABLE_CLASS(Edge);
-	};
-}
-#endif //__EDGE_H__
+#endif //__HASHED_PAIR_H__

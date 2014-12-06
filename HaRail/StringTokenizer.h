@@ -49,6 +49,8 @@ namespace HaRail {
 			bool operator==(const StringTokenizer::iterator& second) { return this->parent == second.parent && this->pos == second.pos; }
 			bool operator!=(const StringTokenizer::iterator& second) { return !this->operator==(second); }
 
+			const char *getPosition() const { return pos; }
+
 		protected:
 			const char *pos;
 			const char *next_tok;

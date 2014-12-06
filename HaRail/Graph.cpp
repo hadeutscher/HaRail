@@ -19,31 +19,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 namespace HaRail {
 	Graph::Graph(const IDataSource *ids, Station *source_station, int start_time)
 		: nodes(),
-		nodesByStation(),
+		generalNodesByStation(),
+		trainNodesByStation(),
 		edges(),
 		start_node(nullptr),
 		end_node(nullptr)
 	{
 		Train *last_train = nullptr;
 		for (Train *train : ids->getTrains()) {
-			if (last_train && last_train->getTrainId() == train->getTrainId() && last_train->getDestTime() != train->getSourceTime()) {
-				Node *wait_source = getNodeOrAdd(last_train->getDest(), last_train->getDestTime());
-				Node *wait_dest = getNodeOrAdd(train->getSource(), train->getSourceTime());
-				Edge *wait_edge = new Edge(Edge::WAIT_ON_TRAIN, nullptr, last_train->getTrainId(), wait_source, wait_dest, train->getSourceTime() - last_train->getDestTime());
-				edges.push_back(wait_edge);
-				wait_source->getEdges().push_back(wait_edge);
+			if (last_train && last_train->getTrainId() == train->getTrainId())
+			{
+				if (last_train->getDest() != train->getSource()) {
+					throw HaException("Bug detected, report this", HaException::CRITICAL_ERROR);
+				}
+				if (last_train->getDestTime() != train->getSourceTime()) {
+					Node *wait_source_train = getNodeOrAdd(last_train->getDest(), last_train->getDestTime(), last_train->getTrainId());
+					Node *wait_dest_train = getNodeOrAdd(train->getSource(), train->getSourceTime(), train->getTrainId());
+					createEdge(nullptr, wait_source_train, wait_dest_train, train->getSourceTime() - last_train->getDestTime());
+				}
 			}
-			Node *source = getNodeOrAdd(train->getSource(), train->getSourceTime());
-			Node *dest = getNodeOrAdd(train->getDest(), train->getDestTime());
-			Edge *edge = new Edge(Edge::TRAIN_MOVE, train, train->getTrainId(), source, dest, train->getCost());
-			edges.push_back(edge);
-			source->getEdges().push_back(edge);
+			Node *source_train = getNodeOrAdd(train->getSource(), train->getSourceTime(), train->getTrainId());
+			Node *source_general = getNodeOrAdd(train->getSource(), train->getSourceTime(), -1);
+			Node *dest_train = getNodeOrAdd(train->getDest(), train->getDestTime(), train->getTrainId());
+			Node *dest_general = getNodeOrAdd(train->getDest(), train->getDestTime(), -1);
+			
+			// Train movement
+			createEdge(train, source_train, dest_train, train->getCost() + MOVEMENT_COST);
+			// Train boarding option
+			createEdge(nullptr, source_general, source_train, SWITCH_COST);
+			// Train unboarding option
+			createEdge(nullptr, dest_train, dest_general, SWITCH_COST);
+
 			last_train = train;
 		}
 
-		start_node = getNodeOrAdd(source_station, start_time);
+		start_node = getNodeOrAdd(source_station, start_time, -1);
 
-		for (pair<Station *, unordered_map<int, Node *>> p : nodesByStation) {
+		for (pair<Station *, unordered_map<int, Node *>> p : generalNodesByStation) {
 			vector<Node *> node_arr;
 			node_arr.reserve(p.second.size());
 			for (pair<int, Node *> p2 : p.second) {
@@ -51,11 +63,9 @@ namespace HaRail {
 			}
 			sort(node_arr.begin(), node_arr.end(), [](Node *first, Node *second) -> bool { return first->getStationTime() < second->getStationTime(); });
 			for (unsigned int i = 0; i < node_arr.size() - 1; i++) {
-				Node *source = node_arr[i];
-				Node *dest = node_arr[i + 1];
-				Edge *edge = new Edge(Edge::WAIT_IN_STATION, nullptr, -1, source, dest, dest->getStationTime() - source->getStationTime());
-				edges.push_back(edge);
-				source->getEdges().push_back(edge);
+				Node *source_general = node_arr[i];
+				Node *dest_general = node_arr[i + 1];
+				createEdge(nullptr, source_general, dest_general, dest_general->getStationTime() - source_general->getStationTime());
 			}
 		}
 	}
@@ -79,38 +89,9 @@ namespace HaRail {
 		start_node->setVisited(true);
 		Node *curr = start_node;
 		while (curr->getStation() != dest_station) {
-			Edge *last_edge = curr->getBestSource();
 			for (Edge *edge : curr->getEdges()) {
 				if (!edge->getDest()->getVisited()) {
 					int cost = curr->getBestCost() + edge->getCost();
-
-					if (last_edge) {
-						if (last_edge->getType() == Edge::TRAIN_MOVE || last_edge->getType() == Edge::WAIT_ON_TRAIN) {
-							// We are already on train - we can only get off the train, or continue on it.
-							if (edge->getType() == Edge::WAIT_IN_STATION) {
-								// Got off train, add train switch cost
-								cost += SWITCH_COST;
-							}
-							else if (edge->getTrainId() != last_edge->getTrainId()) {
-								if (last_edge->getType() == Edge::TRAIN_MOVE) {
-									// Cannot switch trains in 0 time - ignore edge
-									continue;
-								}
-								else {
-									// We are waiting on train, so we can switch trains in virtually 0 time (Since we could have already gone off the train instead of waiting)
-									// However, it still costs time to avoid trains using another train's WAIT_ON_TRAIN to do a cheap train switch
-									cost += SWITCH_COST;
-								}
-							}
-						}
-						else {
-							// We are on station - we can board a train, or continue waiting.
-							if (edge->getType() == Edge::WAIT_ON_TRAIN) {
-								continue;
-							}
-						}
-					}
-
 					if (edge->getDest()->getBestCost() > cost) {
 						edge->getDest()->setBestCost(cost);
 						edge->getDest()->setBestSource(edge);
@@ -124,7 +105,7 @@ namespace HaRail {
 			Node *pair_node;
 			do {
 				if (pq.size() == 0) {
-					throw HaException("impossible route");
+					throw HaException("impossible route", HaException::INVALID_ROUTE_ERROR);
 				}
 				pair<Node *, int> p = pq.top();
 				pq.pop();
@@ -177,14 +158,22 @@ namespace HaRail {
 		return edge ? edge->getTrain()->getTrainId() : -1;
 	}
 
-	Node *Graph::getNodeOrAdd(Station *station, int time)
+	Node *Graph::getNodeOrAdd(Station *station, int time, int train_id)
 	{
-		Node *& node_ref = nodesByStation[station][time];
+		Node *& node_ref = train_id == -1 ? generalNodesByStation[station][time] : trainNodesByStation[station][pair<int, int>(time, train_id)];
 		if (node_ref == nullptr) {
-			Node *node = new Node(station, time);
+			Node *node = new Node(station, time, train_id);
 			node_ref = node;
 			nodes.push_back(node);
 		}
 		return node_ref;
+	}
+
+	Edge *Graph::createEdge(Train *train, Node *source, Node *dest, int cost)
+	{
+		Edge *edge = new Edge(train, source, dest, cost);
+		edges.push_back(edge);
+		source->getEdges().push_back(edge);
+		return edge;
 	}
 }

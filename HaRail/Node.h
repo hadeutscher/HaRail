@@ -24,9 +24,10 @@ namespace HaRail {
 	class Node {
 	public:
 		// Class Methods
-		Node(Station *station, int time)
+		Node(Station *station, int time, int train_id)
 			: station(station),
 			station_time(time),
+			train_id(train_id),
 			edges(),
 			visited(false),
 			best_cost(UNEXPLORED_COST),
@@ -37,6 +38,7 @@ namespace HaRail {
 		// Property Accessors
 		Station *getStation() const { return station; }
 		int getStationTime() const { return station_time; }
+		int getTrainId() const { return train_id; }
 		vector<Edge *>& getEdges() { return edges; }
 		const vector<Edge *>& getEdges() const { return edges; }
 		bool getVisited() const { return visited; }
@@ -55,6 +57,7 @@ namespace HaRail {
 		// Fields
 		Station *station;
 		int station_time;
+		int train_id;
 		vector<Edge *> edges;
 		bool visited;
 		int best_cost;
