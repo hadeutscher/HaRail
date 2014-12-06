@@ -40,7 +40,6 @@ namespace HaRail {
 	protected:
 		// Private Methods
 		void loadTrainsForDate(char *start);
-		char *fasttrackToDate(char *buf) const;
 		pair<int, int> getDateIndex() const;
 		void indexDatabase() const;
 

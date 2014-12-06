@@ -45,8 +45,6 @@ namespace HaRail {
 		char *buf;
 		pair<int, int> index = getDateIndex();
 		Utils::readFilePart(root_path + "stop_times.txt", &buf, index.first, index.second);
-		//char *start = fasttrackToDate(buf);
-		//loadTrainsForDate(start);
 		loadTrainsForDate(buf);
 
 		delete[] buf;
@@ -95,17 +93,6 @@ namespace HaRail {
 			last_station = station;
 			last_time = dw_time2;
 		}
-	}
-
-	char *GTFSDataSource::fasttrackToDate(char *buf) const
-	{
-		string to_find_str = string("\r\n") + date;
-		const char *to_find = to_find_str.c_str();
-		char *result = strstr(buf, to_find);
-		if (!result) {
-			throw HaException("Invalid date or database too old", HaException::DATABASE_FORMAT_ERROR);
-		}
-		return result + 2;
 	}
 
 	pair<int, int> GTFSDataSource::getDateIndex() const
