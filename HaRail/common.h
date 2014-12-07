@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #define STATIC_CLASS(x) private: x() = delete;
 #define UNCOPYABLE_CLASS(x) private: x(const x&) = delete; x& operator=(const x&) = delete;
 
+using namespace std;
+
 namespace HaRail {
 #ifdef _DEBUG
 #ifdef _WIN32
@@ -28,13 +30,15 @@ namespace HaRail {
 	static const char *DATA_ROOT = "~/irw_gtfs/";
 #endif
 #else // _DEBUG
+#ifdef ANDROID
+	static const char *DATA_ROOT = "/sdcard/irw_gtfs/";
+#else // ANDROID
 	static const char *DATA_ROOT = "./irw_gtfs/";
+#endif // ANDROID
 #endif // _DEBUG
 
 	static const unsigned int SWITCH_COST = 60; // This minimizes train switches
 	static const unsigned int MOVEMENT_COST = 1; // This minimizes train movements, to prevent e.g. going a->b->c->d->c->b instead of a->b->c->b, if they have the same dest time
-
-	using namespace std;
 
 	class Station;
 	class Train;

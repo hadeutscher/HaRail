@@ -14,18 +14,27 @@ GNU General Public License for more details.
 * You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
-#ifndef __HASHED_PAIR_H__
-#define __HASHED_PAIR_H__
+#include "lib_main.h"
 
-#include "common.h"
 namespace HaRail {
-	class HashedPair {
-	public:
-		template <typename T, typename U>
-		std::size_t operator()(const std::pair<T, U> &x) const
-		{
-			return 3 * std::hash<T>()(x.first) + std::hash<U>()(x.second);
+	string lib_main(int date, int start_station_id, int start_time, int dest_station_id)
+	{
+		try {
+			GTFSDataSource gds(DATA_ROOT, Utils::padWithZeroes(Utils::int2str(date), 6));
+			gds.initStations();
+			gds.initTrains();
+			vector<Train *> shortest_route;
+			vector<Train *> best_route;
+			Graph::getBestRoutes(&gds, gds.getStationById(start_station_id), start_time, gds.getStationById(dest_station_id), shortest_route, best_route);
+			stringstream ss;
+			Graph::printBestRoutes(shortest_route, best_route, ss);
+			return ss.str();
 		}
-	};
+		catch (HaException e) {
+			return e.what();
+		}
+		catch (...) {
+			return "Unknown Error";
+		}
+	}
 }
-#endif //__HASHED_PAIR_H__

@@ -14,18 +14,23 @@ GNU General Public License for more details.
 * You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
-#ifndef __HASHED_PAIR_H__
-#define __HASHED_PAIR_H__
+#ifndef __LIB_MAIN_H__
+#define __LIB_MAIN_H__
 
 #include "common.h"
+#include "Utils.h"
+#include "HaException.h"
+#include "IDataSource.h"
+#include "GTFSDataSource.h"
+#include "Station.h"
+#include "Train.h"
+#include "Node.h"
+#include "Edge.h"
+#include "Graph.h"
+#include <sstream>
+
 namespace HaRail {
-	class HashedPair {
-	public:
-		template <typename T, typename U>
-		std::size_t operator()(const std::pair<T, U> &x) const
-		{
-			return 3 * std::hash<T>()(x.first) + std::hash<U>()(x.second);
-		}
-	};
+	string lib_main(int date, int start_station_id, int start_time, int dest_station_id);
 }
-#endif //__HASHED_PAIR_H__
+
+#endif //__LIB_MAIN_H__
