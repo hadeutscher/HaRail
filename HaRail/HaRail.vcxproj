@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="ArgumentParser.cpp" />
     <ClCompile Include="Graph.cpp" />
-    <ClCompile Include="lib_main.cpp" />
+    <ClCompile Include="lib_api.cpp" />
     <ClCompile Include="StringTokenizer.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="GTFSDataSource.cpp" />
@@ -38,7 +38,7 @@
     <ClInclude Include="HashedPair.h" />
     <ClInclude Include="IDataSource.h" />
     <ClInclude Include="common.h" />
-    <ClInclude Include="lib_main.h" />
+    <ClInclude Include="lib_api.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="Station.h" />
     <ClInclude Include="StringTokenizer.h" />

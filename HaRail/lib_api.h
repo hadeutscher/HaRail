@@ -14,8 +14,8 @@ GNU General Public License for more details.
 * You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
-#ifndef __LIB_MAIN_H__
-#define __LIB_MAIN_H__
+#ifndef __LIB_API_H__
+#define __LIB_API_H__
 
 #include "common.h"
 #include "Utils.h"
@@ -30,7 +30,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 #include <sstream>
 
 namespace HaRail {
-	string lib_main(int date, int start_station_id, int start_time, int dest_station_id);
+	class HaRailAPI {
+	public:
+		static bool loadData(int date, int start_time, string data_root);
+		static string getLastError();
+		static vector<int> getRoutes(int start_time, int start_station_id, int dest_station_id);
+		static string getRoutesStr(int start_time, int start_station_id, int dest_station_id);
+		static vector<int> getWholeTrainPath(int train_id);
+
+	private:
+		static void encodeRoute(const vector<Train *>& route, vector<int>& out_vec);
+
+		static GTFSDataSource *gds;
+		static HaException last_err;
+	};
 }
 
-#endif //__LIB_MAIN_H__
+#endif //__LIB_API_H__

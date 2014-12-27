@@ -52,6 +52,7 @@ namespace HaRail {
 	class Utils;
 	class Graph;
 	class StringTokenizer;
+	class HaRailAPI;
 
 	// HashedPair is not included here because VC is stupid
 }
