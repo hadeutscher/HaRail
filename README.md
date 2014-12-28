@@ -24,11 +24,7 @@ OPTION 3: Cross-GCC (Android)
 
 1. Create the directories "Release" and "HaRail/GCC_Release"
 
-2. Run make with ANDROID=1
-
-ALTERNATIVELY
-
-2. Run the script android_build.sh which will also copy the output binary to your phone's /data/local/tmp directory
+2. Run make with ANDROID=1 in environment variables OR run the script android_build.sh which will also copy the output binary to your phone's /data/local/tmp directory
 
 INSTALLING
 --------------
