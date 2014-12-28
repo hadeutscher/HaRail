@@ -89,8 +89,8 @@ namespace HaRail {
 			if (!last_train || train->getTrainId() != last_train->getTrainId()) {
 				// Boarding new train
 				if (last_train) {
-					temp_vec.push_back(train->getDest()->getStationId());
-					temp_vec.push_back(train->getDestTime());
+					temp_vec.push_back(last_train->getDest()->getStationId());
+					temp_vec.push_back(last_train->getDestTime());
 				}
 				++trains;
 				temp_vec.push_back(train->getTrainId());
