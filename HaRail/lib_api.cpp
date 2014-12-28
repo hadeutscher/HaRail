@@ -130,15 +130,18 @@ namespace HaRail {
 	vector<int> HaRailAPI::getWholeTrainPath(int train_id)
 	{
 		try {
-			vector<int> result{ 1 };
+			int trains = 0;
+			vector<int> result{ 1, trains };
 			for (Train * train : gds->getTrains()) {
 				if (train->getTrainId() == train_id) {
+					++trains;
 					result.push_back(train->getSource()->getStationId());
 					result.push_back(train->getSourceTime());
 					result.push_back(train->getDest()->getStationId());
 					result.push_back(train->getDestTime());
 				}
 			}
+			result[1] = trains;
 			return result;
 		}
 		catch (HaException e) {
