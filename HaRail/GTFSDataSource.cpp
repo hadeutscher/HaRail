@@ -37,7 +37,7 @@ namespace HaRail {
 		unordered_set<string> result;
 		for (string line : reader.getLines()) {
 			vector<string> lineSplit = reader.splitLine(line);
-			if (Utils::str2int(lineSplit[day_idx]) > 0 && Utils::str2int(lineSplit[start_date_idx]) <= dateInt && Utils::str2int(lineSplit[end_date_idx]) > dateInt) {
+			if (Utils::str2int(lineSplit[day_idx]) > 0 && Utils::str2int(lineSplit[start_date_idx]) <= dateInt && Utils::str2int(lineSplit[end_date_idx]) >= dateInt) { // It seems that both start and end are inclusive
 				result.emplace(lineSplit[service_id_idx]);
 			}
 		}
