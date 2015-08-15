@@ -18,7 +18,7 @@ namespace HaRail {
 
 		// Class Methods
 		StringTokenizer(const char *buf, const char *token) : buf(buf), token(token), token_len(strlen(token)), buf_end(buf + strlen(buf)) {}
-		~StringTokenizer() {}
+		virtual ~StringTokenizer() {}
 
 		// Methods
 		const char *getNextToken(const char *curr) const;

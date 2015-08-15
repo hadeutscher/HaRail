@@ -14,6 +14,9 @@
 #include "Train.h"
 #include "StringTokenizer.h"
 #include "HaException.h"
+#include "GTFSReader.h"
+
+#include <unordered_set>
 
 namespace HaRail {
 	class GTFSDataSource : public IDataSource {
@@ -29,13 +32,29 @@ namespace HaRail {
 
 	protected:
 		// Private Methods
-		void loadTrainsForDate(char *start);
+		unordered_set<string> loadServices() const;
+		unordered_set<string> loadTrips(const unordered_set<string>& services) const;
+		void loadStopTimes(const unordered_set<string>& trips);
+
+		/*void loadTrainsForDate(char *start);
 		pair<int, int> getDateIndex() const;
-		void indexDatabase() const;
+		void indexDatabase() const;*/
 
 		// Fields
 		string root_path;
 		string date;
+		
+		// Constants
+		const vector<string> dayStrings{ "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
+
+		// Internal Classes
+		typedef struct stopTime {
+			int trainId;
+			int arriveTime;
+			int departTime;
+			Station *station;
+			int seq;
+		} StopTime, *PStopTime;
 
 		UNCOPYABLE_CLASS(GTFSDataSource);
 	};

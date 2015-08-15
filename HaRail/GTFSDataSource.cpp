@@ -9,141 +9,147 @@
 namespace HaRail {
 	void GTFSDataSource::initStations()
 	{
-		char *buf;
-		Utils::readFile(root_path + "stops.txt", &buf);
-		char *first_line = strstr(buf, "\r\n");
-		if (!first_line) {
-			throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
+		GTFSReader reader(root_path + "stops.txt");
+		int stop_id_idx = reader.getHeaderIndex("stop_id");
+		int stop_name_idx = reader.getHeaderIndex("stop_name");
+		for (string line : reader.getLines()) {
+			vector<string> lineSplit = reader.splitLine(line);
+			createStation(Utils::str2int(lineSplit[stop_id_idx]), lineSplit[stop_name_idx]);
 		}
-		first_line += 2;
-		StringTokenizer tokenizer(first_line, "\r\n");
-		vector<string> line_split;
-
-		for (string line : tokenizer) {
-			StringTokenizer line_tokenizer(line.c_str(), ",");
-			StringTokenizer::iterator i = line_tokenizer.begin();
-			int station_id = Utils::str2int(*i++);
-			string station_name = *i++;
-			createStation(station_id, station_name);
-		}
-
-		delete[] buf;
 	}
 
 	void GTFSDataSource::initTrains()
 	{
-		char *buf;
-		pair<int, int> index = getDateIndex();
-		Utils::readFilePart(root_path + "stop_times.txt", &buf, index.first, index.second);
-		loadTrainsForDate(buf);
-
-		delete[] buf;
+		unordered_set<string> services = loadServices();
+		unordered_set<string> trips = loadTrips(services);
+		loadStopTimes(trips);
 	}
 
-	void GTFSDataSource::loadTrainsForDate(char *buf)
+	unordered_set<string> GTFSDataSource::loadServices() const
 	{
-		StringTokenizer tokenizer(buf, "\r\n");
-
-		int curr_train_id = -1;
-		int curr_seq = -1;
-		Station *last_station = nullptr;
-		int last_time = -1;
-
-		for (string line : tokenizer) {
-			// Parse the line
-			StringTokenizer line_tokenizer(line.c_str(), ",");
-			StringTokenizer::iterator i = line_tokenizer.begin();
-			string date_id = *i++;
-			int dw_time1 = Utils::parseTime(*i++);
-			int dw_time2 = Utils::parseTime(*i++);
-			Station *station = getStationById(Utils::str2int(*i++));
-			int seq = Utils::str2int(*i++);
-			StringTokenizer date_id_tokenizer(date_id.c_str(), "_");
-			i = date_id_tokenizer.begin();
-			string train_date = *i++;
-			int train_id = Utils::str2int(*i++);
-
-			if (train_date != date) {
-				throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
+		GTFSReader reader(root_path + "calendar.txt");
+		int dateInt = Utils::str2int(Utils::getReverseDate(date));
+		int dayOfWeek = Utils::getDayOfWeek(date);
+		int day_idx = reader.getHeaderIndex(dayStrings.at(dayOfWeek));
+		int service_id_idx = reader.getHeaderIndex("service_id");
+		int start_date_idx = reader.getHeaderIndex("start_date");
+		int end_date_idx = reader.getHeaderIndex("end_date");
+		unordered_set<string> result;
+		for (string line : reader.getLines()) {
+			vector<string> lineSplit = reader.splitLine(line);
+			if (Utils::str2int(lineSplit[day_idx]) > 0 && Utils::str2int(lineSplit[start_date_idx]) <= dateInt && Utils::str2int(lineSplit[end_date_idx]) > dateInt) {
+				result.emplace(lineSplit[service_id_idx]);
 			}
-			if (curr_train_id != train_id) {
-				// new train
-				curr_train_id = train_id;
-				curr_seq = seq;
-				if (curr_seq != 1) {
-					throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
+		}
+		return result;
+	}
+
+	unordered_set<string> GTFSDataSource::loadTrips(const unordered_set<string>& services) const
+	{
+		GTFSReader reader(root_path + "trips.txt");
+		int service_id_idx = reader.getHeaderIndex("service_id");
+		int trip_id_idx = reader.getHeaderIndex("trip_id");
+		unordered_set<string> result;
+		auto notFound = services.end();
+		for (string line : reader.getLines()) {
+			vector<string> lineSplit = reader.splitLine(line);
+			if (services.find(lineSplit[service_id_idx]) != notFound) {
+				result.emplace(lineSplit[trip_id_idx]);
+			}
+		}
+		return result;
+	}
+
+	void GTFSDataSource::loadStopTimes(const unordered_set<string>& trips)
+	{
+		GTFSReader reader(root_path + "stop_times.txt");
+		int trip_id_idx = reader.getHeaderIndex("trip_id");
+		int arrival_time_idx = reader.getHeaderIndex("arrival_time");
+		int departure_time_idx = reader.getHeaderIndex("departure_time");
+		int stop_id_idx = reader.getHeaderIndex("stop_id");
+		int stop_sequence_idx = reader.getHeaderIndex("stop_sequence");
+		auto notFound = trips.end();
+
+		vector<StopTime> stopTimes;
+		string currTripId;
+		int currTrainId;
+		bool tripIdValid = false;
+		StopTime currStop;
+
+		// Parse the file and extract all the relevant stop times
+		for (string line : reader.getLines()) {
+			vector<string> lineSplit = reader.splitLine(line);
+			if (lineSplit[trip_id_idx] == currTripId) {
+				if (!tripIdValid) {
+					// If we already know the trip is invalid, just continue
+					continue;
 				}
 			}
 			else {
-				if (seq != ++curr_seq) {
-					throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
+				// This is a new trip, validate it
+				currTripId = lineSplit[trip_id_idx];
+				tripIdValid = trips.find(currTripId) != notFound;
+				if (!tripIdValid) {
+					// If the new trip is invalid, just continue
+					continue;
 				}
-				createTrain(train_id, last_station, station, last_time, dw_time1);
+				// If the new trip is valid, extract its train ID
+				currTrainId = Utils::str2int(*(StringTokenizer(currTripId.c_str(), "_").begin()));
 			}
-			last_station = station;
-			last_time = dw_time2;
-		}
-	}
 
-	pair<int, int> GTFSDataSource::getDateIndex() const
-	{
-		ifstream ifs(root_path + "HaRail.idx", ios::in | ios::binary);
-
-		while (!ifs.good() || Utils::readObject<unsigned int>(ifs) != INDEXER_VERSION) {
-			cout << "New database found, indexing..." << endl;
-			if (ifs.is_open()) {
-				ifs.close();
-			}
-			indexDatabase();
-			ifs.open(root_path + "HaRail.idx", ios::in | ios::binary);
-		}
-		
-		unsigned int date_uint;
-		try {
-			date_uint = Utils::str2int(date);
-		}
-		catch (boost::bad_lexical_cast) {
-			throw HaException("Invalid date", HaException::CONVERSION_ERROR);
+			// Trip is valid, store the stop
+			currStop.trainId = currTrainId;
+			currStop.seq = Utils::str2int(lineSplit[stop_sequence_idx]);
+			currStop.arriveTime = Utils::parseTime(lineSplit[arrival_time_idx]);
+			currStop.departTime = Utils::parseTime(lineSplit[departure_time_idx]);
+			currStop.station = getStationById(Utils::str2int(lineSplit[stop_id_idx]));
+			stopTimes.push_back(currStop);
 		}
 
-		while (!ifs.eof()) {
-			unsigned int offs = Utils::readObject<unsigned int>(ifs);
-			unsigned int date_field = Utils::readObject<unsigned int>(ifs);
-			if (date_field == date_uint) {
-				unsigned int end_offs = Utils::readObject<unsigned int>(ifs);
-				return pair<int, int>(offs, end_offs - offs);
+		sort(stopTimes.begin(), stopTimes.end(),
+			[](const StopTime& a, const StopTime& b) -> bool
+		{
+			if (a.trainId > b.trainId) {
+				return false;
 			}
-		}
-		throw HaException("Invalid date or database too old", HaException::DATABASE_FORMAT_ERROR);
-	}
+			else if (a.trainId < b.trainId) {
+				return true;
+			}
+			else {
+				if (a.seq > b.seq) {
+					return false;
+				}
+				else if (a.seq < b.seq) {
+					return true;
+				}
+				else {
+					throw HaException("bad database format: multiple stops with same SEQ", HaException::DATABASE_FORMAT_ERROR);
+				}
+			}
+		});
 
-	void GTFSDataSource::indexDatabase() const
-	{
-		char *buf;
-		Utils::readFile(root_path + "stop_times.txt", &buf);
-		char *first_line = strstr(buf, "\r\n");
-		if (!first_line) {
-			throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
-		}
-		first_line += 2;
+		currTrainId = -1;
+		int currSeq = -1;
+		Station *lastStation = nullptr;
+		int lastTime = -1;
 
-		ofstream ofs(root_path + "HaRail.idx", ios::out | ios::binary | ios::trunc);
-		Utils::writeObject<unsigned int>(ofs, INDEXER_VERSION);
-		string last_date("XXXXXX");
-		StringTokenizer tokenizer(first_line, "\r\n");
-		for (StringTokenizer::iterator i = tokenizer.begin(), end = tokenizer.end(); i != end; ++i) {
-			string line = *i;
-			if (line.length() < 8 || line.c_str()[6] != '_') {
-				throw HaException("bad database format", HaException::DATABASE_FORMAT_ERROR);
+		for (StopTime const& stop : stopTimes) {
+			if (stop.trainId != currTrainId) {
+				// New train
+				if (stop.seq != (currSeq = 1)) {
+					throw HaException("bad database format: missing SEQs", HaException::DATABASE_FORMAT_ERROR);
+				}
+				currTrainId = stop.trainId;
 			}
-			if (memcmp(last_date.c_str(), line.c_str(), 6)) {
-				last_date = line.substr(0, 6);
-				Utils::writeObject<unsigned int>(ofs, i.getPosition() - buf);
-				Utils::writeObject<unsigned int>(ofs, Utils::str2int(last_date));
+			else {
+				if (stop.seq != ++currSeq) {
+					throw HaException("bad database format: missing SEQs", HaException::DATABASE_FORMAT_ERROR);
+				}
+				createTrain(currTrainId, lastStation, stop.station, lastTime, stop.arriveTime);
 			}
+
+			lastStation = stop.station;
+			lastTime = stop.departTime;
 		}
-		Utils::writeObject<const char *>(ofs, tokenizer.end().getPosition());
-		Utils::writeObject<unsigned int>(ofs, UINT_MAX);
-		delete[] buf;
 	}
 }

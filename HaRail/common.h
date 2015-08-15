@@ -15,15 +15,15 @@ using namespace std;
 namespace HaRail {
 #ifdef _DEBUG
 #ifdef _WIN32
-	static const char *DATA_ROOT = "C:/irw_gtfs/";
+	static const char *DATA_ROOT = "C:/irw_gtfs2/";
 #else
-	static const char *DATA_ROOT = "~/irw_gtfs/";
+	static const char *DATA_ROOT = "~/irw_gtfs2/";
 #endif
 #else // _DEBUG
 #ifdef ANDROID
-	static const char *DATA_ROOT = "/sdcard/irw_gtfs/";
+	static const char *DATA_ROOT = "/sdcard/irw_gtfs2/";
 #else // ANDROID
-	static const char *DATA_ROOT = "./irw_gtfs/";
+	static const char *DATA_ROOT = "./irw_gtfs2/";
 #endif // ANDROID
 #endif // _DEBUG
 
@@ -43,6 +43,7 @@ namespace HaRail {
 	class Graph;
 	class StringTokenizer;
 	class HaRailAPI;
+	class GTFSReader;
 
 	// HashedPair is not included here because VC is stupid
 }

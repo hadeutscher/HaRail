@@ -24,6 +24,9 @@ namespace HaRail {
 		static void readFile(const string& path, char **out_buf);
 		static void readFilePart(const string& path, char **out_buf, unsigned int start, unsigned int length);
 		static string getCurrentDate();
+		static void checkDate(const string& date);
+		static int getDayOfWeek(const string& date);
+		static string getReverseDate(const string& date);
 		template<typename T>
 		static void writeObject(ofstream& ofs, T data) {
 			ofs.write((const char *)&data, sizeof(T));

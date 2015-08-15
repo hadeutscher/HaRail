@@ -123,4 +123,24 @@ namespace HaRail {
 		string date = string(padWithZeroes(int2str(d.day().as_number()), 2) + padWithZeroes(int2str(d.month().as_number()), 2) + padWithZeroes(int2str(d.year() % 100), 2));
 		return date;
 	}
+
+	void Utils::checkDate(const string& date)
+	{
+		if (date.length() != 6) {
+			throw HaException("Invalid date", HaException::CONVERSION_ERROR);
+		}
+	}
+
+	int Utils::getDayOfWeek(const string& date)
+	{
+		checkDate(date);
+		boost::gregorian::date d(str2int(date.substr(4, 2)) + 2000, str2int(date.substr(2, 2)), str2int(date.substr(0, 2)));
+		return d.day_of_week();
+	}
+
+	string Utils::getReverseDate(const string& date)
+	{
+		checkDate(date);
+		return int2str(str2int(date.substr(4, 2)) + 2000) + date.substr(2, 2) + date.substr(0, 2);
+	}
 }

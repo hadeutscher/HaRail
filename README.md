@@ -29,12 +29,7 @@ OPTION 3: Cross-GCC (Android)
 INSTALLING
 --------------
 
-The program expects to find a GTFS database; at C:\irw_gtfs for debug builds (~/irw_gtfs on linux) and at ./irw_gtfs for release builds.
+The program expects to find a GTFS database; at C:\irw_gtfs2 for debug builds (~/irw_gtfs2 on linux) and at ./irw_gtfs2 for release builds.
 
-You can get IRW_GTFS at ftp://gtfs.mot.gov.il/irw_gtfs.zip (see http://he.mot.gov.il/index.php?option=com_content&view=article&id=2244:pub-trn-gtfs&catid=167:pub-trn-dev-info&Itemid=304 for more info).
-
-TL;DR:
-
-1. Download ftp://gtfs.mot.gov.il/irw_gtfs.zip
-
-2. Extract it to irw_gtfs directory in the same directory where you binary is
+You can get israel-public-transportation.zip at ftp://gtfs.mot.gov.il/israel-public-transportation.zip (see http://he.mot.gov.il/index.php?option=com_content&view=article&id=2244:pub-trn-gtfs&catid=167:pub-trn-dev-info&Itemid=304 for more info).
+Then, you need to strip it of all the irrelevant info. This can be done using the IRWConverter C# program (also present in my github repos)
