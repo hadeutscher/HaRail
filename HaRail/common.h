@@ -10,6 +10,7 @@
 #define STATIC_CLASS(x) private: x() = delete;
 #define UNCOPYABLE_CLASS(x) private: x(const x&) = delete; x& operator=(const x&) = delete;
 
+#include <iostream>
 using namespace std;
 
 namespace HaRail {

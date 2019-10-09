@@ -123,7 +123,7 @@ namespace HaRail {
 					return true;
 				}
 				else {
-					throw HaException("bad database format: multiple stops with same SEQ", HaException::DATABASE_FORMAT_ERROR);
+					return false;
 				}
 			}
 		});
