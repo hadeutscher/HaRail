@@ -167,6 +167,15 @@ namespace HaRail {
 		return edge;
 	}
 
+	void Graph::getBestRouteSimple(IDataSource *ds, Station *start_station, int start_time, Station *dest_station, vector<Train *>& best_route) {
+		if (start_station == dest_station) {
+			throw HaException("Start and Dest equal", HaException::INVALID_ROUTE_ERROR);
+		}
+		Graph g(ds, start_station, start_time);
+		g.dijkstra(dest_station);
+		best_route = g.backtraceRoute();
+	}
+
 	void Graph::getBestRoutes(IDataSource *ds, Station *start_station, int start_time, Station *dest_station, vector<Train *>& shortest_route, vector<Train *>& best_route)
 	{
 		if (start_station == dest_station) {
@@ -207,6 +216,11 @@ namespace HaRail {
 				shortest_route = alt_route;
 			}
 		}
+	}
+
+	int Graph::getRouteStartTime(const vector<Train *>& route)
+	{
+		return route[0]->getSourceTime();
 	}
 
 	int Graph::getRouteEndTime(const vector<Train *>& route)

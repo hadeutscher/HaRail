@@ -42,6 +42,32 @@ namespace HaRail {
 		return last_err.what();
 	}
 
+    vector<int> HaRailAPI::getAllFollowingRoutes(int start_time, int start_station_id, int dest_station_id)
+	{
+		vector<int> result{ 1 };
+		bool found_some_route = false;
+		try {
+			while (true) {
+				vector<Train *> route{};
+				Graph::getBestRouteSimple(gds, gds->getStationById(start_station_id), start_time, gds->getStationById(dest_station_id), route);
+				encodeRouteSimple(route, result);
+				found_some_route = true;
+			}
+		}
+		catch (HaException e) {
+		    if (e.getType() == HaException::INVALID_ROUTE_ERROR && found_some_route) {
+		        // This is fine, we just reached end of day
+		        return result;
+		    }
+			last_err = e;
+			return vector<int> { 0 };
+		}
+		catch (...) {
+			last_err = HaException("Unknown Error", HaException::CRITICAL_ERROR);
+			return vector<int> { 0 };
+		}
+	}
+
 	vector<int> HaRailAPI::getRoutes(int start_time, int start_station_id, int dest_station_id)
 	{
 		try {
@@ -99,7 +125,14 @@ namespace HaRail {
 		}
 	}
 
-	string HaRailAPI::getRoutesStr(int start_time, int start_station_id, int dest_station_id)
+    void HaRailAPI::encodeRouteSimple(const vector<Train *>& route, vector<int>& out_vec)
+    {
+        out_vec.push_back(Graph::getRouteStartTime(route));
+        out_vec.push_back(Graph::getRouteEndTime(route));
+        out_vec.push_back(Graph::countTrainSwitches(route));
+    }
+
+    string HaRailAPI::getRoutesStr(int start_time, int start_station_id, int dest_station_id)
 	{
 		try {
 			vector<Train *> shortest_route;

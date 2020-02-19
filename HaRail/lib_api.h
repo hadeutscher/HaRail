@@ -24,12 +24,14 @@ namespace HaRail {
 	public:
 		static bool loadData(int date, int start_time, string data_root);
 		static string getLastError();
+        static vector<int> getAllFollowingRoutes(int start_time, int start_station_id, int dest_station_id);
 		static vector<int> getRoutes(int start_time, int start_station_id, int dest_station_id);
 		static string getRoutesStr(int start_time, int start_station_id, int dest_station_id);
 		static vector<int> getWholeTrainPath(int train_id);
 
 	private:
 		static void encodeRoute(const vector<Train *>& route, vector<int>& out_vec);
+        static void encodeRouteSimple(const vector<Train *>& route, vector<int>& out_vec);
 
 		static GTFSDataSource *gds;
 		static HaException last_err;
