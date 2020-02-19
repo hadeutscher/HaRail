@@ -51,6 +51,7 @@ namespace HaRail {
 				vector<Train *> route{};
 				Graph::getBestRouteSimple(gds, gds->getStationById(start_station_id), start_time, gds->getStationById(dest_station_id), route);
 				encodeRouteSimple(route, result);
+				start_time = Graph::getRouteStartTime(route) + 1;
 				found_some_route = true;
 			}
 		}
